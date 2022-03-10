@@ -1,0 +1,9 @@
+# Run VPR only for architecture exploration
+vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
+    --device ${VPR_DEVICE_LAYOUT} \
+    --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} \
+    --constant_net_method route \
+    --save_graphics on
+
+# Finish and exit OpenFPGA
+exit

@@ -1,0 +1,90 @@
+# Yosys synthesis script for ${TOP_MODULE}
+
+#########################
+# Parse input files
+#########################
+# Read verilog files
+read_verilog ${READ_VERILOG_OPTIONS} ${VERILOG_FILES}
+# Read technology library
+read_verilog -lib -specify ${YOSYS_CELL_SIM_VERILOG}
+
+#########################
+# Prepare for synthesis
+#########################
+# Identify top module from hierarchy
+hierarchy -check -top ${TOP_MODULE}
+# Convert high-level behavioral parts ("processes") to DFFs and muxes
+proc
+# Convert asynchronous FFs to synchronous FFs
+techmap -map +/adff2dff.v
+# Flatten all the gates/primitives
+flatten
+# Identify tri-state buffers from 'z' signal in AST
+# with follow-up optimizations to clean up AST
+tribuf -logic
+opt_expr
+opt_clean
+# Demote inout ports to input or output port
+# with follow-up optimizations to clean up AST
+deminout
+opt -nodffe -nosdff
+opt_expr
+opt_clean
+# Check if the design is valid
+check
+opt -nodffe -nosdff
+# Reduce the word size of operations if possible. ignore dont care
+wreduce -keepdc
+# Applies a collection of peephole optimizers to the current design
+peepopt
+# Transforms $pmux cells to trees of $mux cells
+pmuxtree
+opt_clean
+
+##########################
+## Run coarse synthesis
+##########################
+opt -nodffe -nosdff
+# Performs finite-state-machine (FSM) extraction and recoding
+fsm
+# Run a quick follow-up optimization to sweep out unused nets/signals
+opt -fast -nodffe -nosdff
+
+#########################
+# Map logics to BRAMs
+#########################
+# Converts memories to multiport memory blocks
+memory -nomap
+opt_clean
+opt -fast -nodffe -nosdff
+# Converts the multi-port $mem memory cells into block ram instances
+memory_bram -rules ${YOSYS_BRAM_MAP_RULES}
+techmap -map ${YOSYS_BRAM_MAP_VERILOG}
+opt -fast -mux_undef -undriven -fine -nodffe -nosdff
+# Translates multiport memories to basic cells
+memory_map
+opt -undriven -fine -nodffe -nosdff
+
+#########################
+# Convert design to (logical) gate-level netlists
+#########################
+techmap
+opt -fast -nodffe -nosdff
+clean
+
+#########################
+# Map LUTs
+#########################
+abc -lut ${LUT_SIZE}
+
+#########################
+# Check and show statisitics
+#########################
+hierarchy -check
+stat
+
+#########################
+# Output netlists
+#########################
+opt_clean -purge
+write_blif ${OUTPUT_BLIF}

@@ -1,0 +1,6 @@
+[submodule "third_party/picorv32"]
+	path = third_party/picorv32
+	url = https://github.com/YosysHQ/picorv32.git
+[submodule "third_party/ibex"]
+	path = third_party/ibex
+	url = https://github.com/lowRISC/ibex.git
