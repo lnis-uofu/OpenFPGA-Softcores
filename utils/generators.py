@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, sys, re
+from utils.project import ProjectEnv
 
 class Template(object):
     """
@@ -22,27 +23,20 @@ class Template(object):
         for key, value in template_vars.items():
             template = re.sub(f'{{{{\s*{key}\s*}}}}', f"{value}", template)
         # Create the basedir if it's not existing
-        try:
+        if not os.path.isdir(self.output_dir):
             os.makedirs(self.output_dir)
-        except:
-            pass
         # write the task file with the right variables
         with open(os.path.join(self.output_dir, target_filename), "w") as fp:
             fp.write(template)
 
 
-class Task(Template):
-    # Project variables
-    openfpga_shell_tmpl      = os.path.abspath("openfpga_flow/openfpga_shell_scripts/arch_exploration_only_vpr.openfpga")
-    yosys_vpr_bram_flow_tmpl = os.path.abspath("openfpga_flow/misc/ys_tmpl_yosys_vpr_bram_flow.ys")
-    run_script               = f"{os.environ['OPENFPGA_PATH']}/openfpga_flow/scripts/run_fpga_task.py"
-
+class Task(Template,ProjectEnv):
     """
     Class used to generate OpenFPGA task (.conf) launchers.
     """
     def __init__(self, template_task_file, output_dir='.', **kwargs):
         super().__init__(template_task_file, output_dir)
-        # default kwargs
+        # default arguments
         self.device_layout = kwargs.get('device_layout', 'auto')
         self.channel_width = kwargs.get('channel_width', 'auto')
 
@@ -56,16 +50,20 @@ class Task(Template):
         if not hasattr(self, "bench_top_module"):
             raise AttributeError("Missing 'bench_top_module' attribute")
         # Default value of the channel width constraint
-        chan_width = -1 if self.channel_width is "auto" else self.channel_width
+        if self.channel_width == "auto":
+            chan_width = -1
+        else:
+            chan_width = self.channel_width
         # Generate the OpenFPGA task configuration file
         task_vars = {
-            "openfpga_shell_tmpl"       : self.openfpga_shell_tmpl,
-            "vpr_route_chan_width"      : chan_width,
-            "vpr_device_layout"         : self.device_layout,
-            "bench_files"               : self.bench_files,
-            "bench_top_module"          : self.bench_top_module,
+            "openfpga_shell_tmpl"           : self.openfpga_shell_flow,
+            "vpr_route_chan_width"          : chan_width,
+            "vpr_device_layout"             : self.device_layout,
+            "bench_files"                   : self.bench_files,
+            "bench_top_module"              : self.bench_top_module,
             # FIXME: this a patch waiting for the PR of the corrected BRAM flow
-            "yosys_vpr_bram_flow_tmpl"  : self.yosys_vpr_bram_flow_tmpl,
+            "yosys_vpr_bram_flow_tmpl"      : self.yosys_bram_flow,
+            "yosys_vpr_bram_dsp_flow_tmpl"  : self.yosys_bram_dsp_flow,
         }
         # Render the OpenFPGA task file
         self.render(os.path.join(self.output_dir, "config", "task.conf"), task_vars)
@@ -77,5 +75,5 @@ class Task(Template):
         task_options = kwargs.get("task_options", [])
         if debug:
             task_options.append("--debug")
-        os.system(f"python3 {self.run_script} {self.output_dir} {' '.join(task_options)}")
+        os.system(f"python3 {self.run_fpga_task} {self.output_dir} {' '.join(task_options)}")
 

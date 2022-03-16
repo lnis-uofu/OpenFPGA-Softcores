@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import os
-from softcores.utils import Template
+from utils.generators import Template
+from utils.parsers import ReportParser
 
 class PicoRV32(Template):
 
     def __init__(self, output_dir=".", **kwargs):
         super().__init__(
-            os.path.abspath('benchmarks/picosoc.v'),
+            # FIXME: set the ProjectEnv class to use an absolute path
+            os.path.abspath('softcores/templates/picosoc.v'),
             output_dir,
         )
         self.top_module      = "picosoc"
@@ -58,3 +60,23 @@ class PicoRV32(Template):
             "memory_size"       : int(self.memory_size/4),
         })
 
+
+class PicosocReport(ReportParser):
+    """
+    Define a report parser to catch the memory size post-simulation, looking
+    inside the result directory (run_dir).
+    """
+    def __init__(self,
+                 filename  = "picosoc.v",
+                 searchdir = os.path.join("run_dir", "latest")):
+        # inherits from the generic ReportParser class
+        super().__init__(filename, searchdir)
+        # define parsing rules
+        self.add_regex_rule(r'parameter integer MEM_WORDS\s*=\s*(\d+)\s*;', "memory_size")
+
+    def parse(self):
+        # call the parent method
+        super().parse()
+        # fix the caught memory size, which is multiply by 4
+        if "memory_size" in self.results:
+            self.results["memory_size"] = int(self.results['memory_size'])*4

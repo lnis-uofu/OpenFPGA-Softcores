@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+
+import os, sys, re
+from glob import glob
+from collections import OrderedDict
+
+class ReportParser(object):
+    """
+    Generic class used to parse any loggers, reports or results file, only
+    using regular expression and tokens.
+    """
+    def __init__(self, filename, searchdir=None, section=None):
+        # if basedir is defined, automatically locate the file path
+        if searchdir is not None:
+            filenames = glob(f"{searchdir}/**/{filename}", recursive=True)
+            if len(filenames) != 1:
+                print(f"Warning: '{filename}' not found in '{searchdir}'!")
+            else:
+                filename = filenames[0]
+        # define a defautl section name for debugging
+        if section is None:
+            section = type(self).__name__
+        self.section        = section
+        # save the full filename path and the search dir
+        self.filename       = filename
+        self.searchdir      = searchdir
+        # save all parsed results in a dictionary
+        self.results        = OrderedDict()
+        # keep each regex rules in a dictionary
+        self._regex_rules   = []
+        self._mregex_rules  = []
+
+    def __str__(self):
+        """Print the content of the results attribute using th INI format."""
+        results = '\n'.join([f"{k} = {v}" for k, v in self.results.items()])
+        return f"[{self.section.upper()}]\n{results}"
+
+    def add_regex_rule(self, regex, keyname):
+        """
+        Catch the first group of the regex and store it in the 'results'
+        attribute according to its associated key. All rules are saved and
+        called during the 'parse' method is executed.
+        """
+        self._regex_rules.append({
+            'key'   : keyname,
+            'regex' : regex,
+        })
+
+    def add_multiline_regex_rule(self, start_trig, end_trig, regex, keyname):
+        """
+        Catch a block of data, located between the 'start' trigger and the
+        'end' trigger. All results are saved with the 'keyname' as prefix and
+        the first group of the regex, and the value corresponds to the second
+        group of the regex. These catches are performed when the 'parse'
+        method is executed.
+        """
+        self._mregex_rules.append({
+                'key'   : keyname,
+                'start' : start_trig,
+                'end'   : end_trig,
+                'regex' : regex,
+                'token' : False,
+        })
+
+    def parse(self):
+        """
+        Parse the 'filename' line per line for each single and multiple line
+        regular expressions. Tokens are used for the multiline regex strategy,
+        triggered by the 'start' and 'end' associated regex.
+        """
+        # test if the file exist
+        if not os.path.isfile(self.filename):
+            print(f"Warning: '{self.filename}' not found!")
+            return
+        # parse the file
+        with open(self.filename, 'r') as fp:
+            for line in fp.readlines():
+                line = line.rstrip()
+                # single line regex parsing
+                for rule in self._regex_rules:
+                    m = re.search(rule['regex'], line)
+                    if m:
+                        self.results[rule['key']] = m.group(1)
+                # multiline regex parsing
+                for rule in self._mregex_rules:
+                    # end trigger
+                    if rule['token'] is True and re.search(rule['end'],line):
+                        rule['token'] = False
+                    # catch the multiline contents
+                    m = re.search(rule['regex'], line)
+                    if m and rule['token']:
+                        self.results[f"{rule['key']}.{m.group(1)}"] = m.group(2)
+                    # start trigger
+                    if rule['token'] is False and re.search(rule['start'],line):
+                        rule['token'] = True
+
+
+class YosysReport(ReportParser):
+    def __init__(self,
+                 logger_filename = "yosys_output.log",
+                 searchdir       = os.path.join("run_dir", "latest")):
+        # inherits from the generic ReportParser class
+        super().__init__(logger_filename, searchdir)
+        # define parsing rules
+        self.add_regex_rule(r'ABC RESULTS:\s+\$lut cells:\s+(\d+)', "abc_luts")
+        self.add_regex_rule(r'ABC RESULTS:\s+internal signals:\s+(\d+)', "abc_intern_signals")
+        self.add_regex_rule(r'ABC RESULTS:\s+input signals:\s+(\d+)', "abc_input_signals")
+        self.add_regex_rule(r'ABC RESULTS:\s+output signals:\s+(\d+)', "abc_output_signals")
+        self.add_regex_rule(r'Number of wires:\s+(\d+)', "wires")
+        self.add_regex_rule(r'Number of wire bits:\s+(\d+)', "wire_bits")
+        self.add_regex_rule(r'Number of public wires:\s+(\d+)', "public_wires")
+        self.add_regex_rule(r'Number of public wire bits:\s+(\d+)', "public_wire_bits")
+        self.add_regex_rule(r'Number of cells:\s+(\d+)', "total_cells")
+        self.add_multiline_regex_rule(
+            r'Number of cells:', r'^$', r'([^ ]+)\s+(\d+)', "cells")
+        # parse the file
+        self.parse()
+
+
+class VprReports(object):
+    def __init__(self,
+                 stats_filename  = "vpr_stat.result",
+                 logger_filename = "vpr_stdout.log",
+                 searchdir       = os.path.join("run_dir","latest")):
+        # Logger file
+        self.logger = ReportParser(logger_filename, searchdir, "vpr_logger")
+        self._define_logger_parsing_rules()
+        self.logger.parse()
+        # Result file
+        self.stats = ReportParser(stats_filename, searchdir, "vpr_stats")
+        self._define_stats_parsing_rules()
+        self.stats.parse()
+
+    def __str__(self):
+        return f"{self.logger}\n{self.stats}"
+
+    def _define_logger_parsing_rules(self):
+        self.logger.add_multiline_regex_rule(
+            r'Blocks: \d+', r'Nets\s*: \d+', r'([^ ]+)\s*:\s*(\d+)', "circuit_blocks")
+        self.logger.add_regex_rule(r'^FPGA sized to (\d+ x \d+):', "device_layout")
+        self.logger.add_regex_rule(r'Fmax:\s+(.+)', "max_frequency")
+        self.logger.add_regex_rule(r'Maximum net length:\s+(\d+)', "max_net_length")
+        self.logger.add_regex_rule(r'^Average number of bends per net:\s+([^ ]+)', "avg_bends_per_net")
+        self.logger.add_regex_rule(r'Maximum \# of bends:\s+(\d+)', "max_bends")
+        self.logger.add_regex_rule(r'average wire segments per net:\s+([^ ]+)', "avg_segments_per_net")
+        self.logger.add_regex_rule(r'Maximum segments used by a net:\s+(\d+)', "max_segments_per_net")
+        # Channel width
+        self.logger.add_regex_rule(r'^Best routing .+ (\d+)\.', "channel_width")
+        self.logger.add_regex_rule(r'^Circuit successfully routed .+ (\d+)\.', "channel_width")
+        self.logger.add_regex_rule(r'^Circuit is (unroutable)', "channel_width")
+
+    def _define_stats_parsing_rules(self):
+        self.stats.add_regex_rule(r'^clb_blocks = (\d+)', "clb_blocks")
+        self.stats.add_regex_rule(r'^io_blocks = (\d+)', "io_blocks")
+        self.stats.add_regex_rule(r'^memory_blocks = (\d+)', "memory_blocks")
+        self.stats.add_regex_rule(r'^average_net_length = ([^ ]+)', "avg_net_length")
+        self.stats.add_regex_rule(r'^critical_path = ([^ ]+)', "critical_path")
+        self.stats.add_regex_rule(r'^total_routing_area = ([^ ]+)', "total_routing_area")
+        self.stats.add_regex_rule(r'^total_logic_block_area = ([^ ]+)', "total_logic_block_area")
+        self.stats.add_regex_rule(r'^total_wire_length = ([^ ]+)', "total_wire_length")
+
+
+class OpenfpgaShell(ReportParser):
+    def __init__(self,
+                 filename  = "*_run.openfpga",
+                 searchdir = os.path.join("run_dir", "latest")):
+        # inherits from the generic ReportParser class
+        super().__init__(filename, searchdir)
+        # define parsing rules
+        self.add_regex_rule(r'^vpr .+/([^/]+)\.xml', "arch")
+        self.add_regex_rule(r'^vpr .+/(run\d+)/.+\.xml', "run")
+        self.add_regex_rule(r'--device ([^ ]+)', "device_layout")
+        self.add_regex_rule(r'--route_chan_width ([^ ]+)', "channel_width")
+        # parse the file
+        self.parse()
+
+
+class OpenfpgaTaskLogger(ReportParser):
+    def __init__(self,
+                 filename  = "*_out.log",
+                 searchdir = os.path.join("run_dir", "latest")):
+        # inherits from the generic ReportParser class
+        super().__init__(filename, searchdir)
+        # Define parsing rules
+        self.add_regex_rule(r'ys_tmpl_yosys_vpr([^ /;]+)flow.ys ', "yosys_flow")
+        # parse the file
+        self.parse()
+
