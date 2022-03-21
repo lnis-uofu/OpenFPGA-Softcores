@@ -62,14 +62,14 @@ module picosoc (
 	// input  flash_io3_di
 );
 	parameter [0:0] BARREL_SHIFTER      = 1;
-	parameter [0:0] ENABLE_MUL          = {{enable_mul}}; // 1=RV32M
-	parameter [0:0] ENABLE_DIV          = {{enable_div}}; // 1=RV32M
-	parameter [0:0] ENABLE_FAST_MUL     = {{enable_fast_mul}};
-	parameter [0:0] ENABLE_COMPRESSED   = {{enable_compressed}}; // 1=RV32C
+	parameter [0:0] ENABLE_MUL          = ${enable_mul}; // 1=RV32M
+	parameter [0:0] ENABLE_DIV          = ${enable_div}; // 1=RV32M
+	parameter [0:0] ENABLE_FAST_MUL     = ${enable_fast_mul};
+	parameter [0:0] ENABLE_COMPRESSED   = ${enable_compressed}; // 1=RV32C
 	parameter [0:0] ENABLE_COUNTERS     = 1; // 1=RV32I, 0=RV32E
 	parameter [0:0] ENABLE_IRQ_QREGS    = 0;
 
-	parameter integer MEM_WORDS         = {{memory_size}}; // 256 = 1kB
+	parameter integer MEM_WORDS         = ${memory_size}; // 256 = 1kB
 	parameter [31:0] STACKADDR          = (4*MEM_WORDS);  // end of memory
 	parameter [31:0] PROGADDR_RESET     = 32'h 0010_0000; // 1 MB into flash
 	parameter [31:0] PROGADDR_IRQ       = 32'h 0000_0000;

@@ -9,8 +9,10 @@ import csv
 import argparse
 from glob import glob
 from softcores import *
-from utils.parsers import (YosysReport, VprReports, OpenfpgaShell,
-                           OpenfpgaTaskLogger)
+from utils.parsers.yosys_report_parser import YosysReport
+from utils.parsers.vpr_report_parser import VprReports, VprReportTiming
+from utils.parsers.openfpga_shell_parser import OpenfpgaShell
+from utils.parsers.openfpga_task_parser import OpenfpgaTaskLogger
 
 # ============================================================================
 #  Command-line arguments

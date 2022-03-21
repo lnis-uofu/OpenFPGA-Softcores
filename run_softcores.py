@@ -4,12 +4,10 @@
 Just another Python generator of OpenFPGA tasks to evaluate softcore performances.
 """
 
-import os
-import csv
-import argparse
+import os, csv, argparse
 from glob import glob
 from softcores import *
-from utils.generators import Task
+from utils.generators.openfpga_task_gen import OpenfpgaTaskLauncher
 
 ## Check if the OPENFPGA_PATH environment variable exist
 if not os.environ.get('OPENFPGA_PATH', None):
@@ -47,7 +45,7 @@ ap.add_argument('--run-dir', metavar="<path>", dest="run_dir",
 ap.add_argument('--device-layout', metavar="<WxH>", dest="device_layout",
                 help="Define a fixed FPGA layout (default: %(default)s)",
                 default="auto")
-ap.add_argument('--channel-width', metavar="<integer>", dest="channel_width",
+ap.add_argument('--channel-width', metavar="<size>", dest="channel_width",
                 help="Define a fixed FPGA channel width (default: %(default)s)",
                 default="auto")
 # Softcore-related arguments
@@ -73,11 +71,11 @@ def run_single_task():
     Single task launcher
     """
     # Create the OpenFPGA task launcher
-    task = Task(
-        template_task_file  = args.fpga_arch,
-        output_dir          = args.run_dir,
-        device_layout       = args.device_layout,
-        channel_width       = args.channel_width,
+    task = OpenfpgaTaskLauncher(
+        template_file   = args.fpga_arch,
+        output_dir      = args.run_dir,
+        device_layout   = args.device_layout,
+        channel_width   = args.channel_width,
     )
     # PicoRV32
     if args.softcore == "picorv32":

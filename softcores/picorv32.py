@@ -1,40 +1,43 @@
 #!/usr/bin/env python3
 
 import os
-from utils.generators import Template
-from utils.parsers import ReportParser
+from string import Template
+from utils.project import ProjectEnv
+from utils.parsers.base_parser import BaseParser
 
-class PicoRV32(Template):
+class PicoRV32(ProjectEnv):
 
     def __init__(self, output_dir=".", **kwargs):
-        super().__init__(
-            # FIXME: set the ProjectEnv class to use an absolute path
-            os.path.abspath('softcores/templates/picosoc.v'),
-            output_dir,
-        )
+        # softcore parameters
+        self.output_dir      = os.path.abspath(output_dir)
         self.top_module      = "picosoc"
-        self.target_filename = "picosoc.v"
-        self.root_dir        = os.path.abspath('third_party/picorv32')
-        self.target_file     = os.path.abspath(os.path.join(self.output_dir, self.target_filename))
+        self.template_file   = os.path.join(self.softcore_tmpl_dir, "picosoc.v")
+        self.source_dir      = os.path.join(self.third_party_dir, "picorv32")
+        self.target_file     = os.path.join(self.output_dir, "picosoc.v")
         # optional parameters
         self.memory_size     = kwargs.get('memory_size', 1024)
         self.enable_fast_mul = kwargs.get('enable_fast_mul', 0)
 
-    def configure_core_files(self, core_template_vars={}):
+    def _configure_core_files(self, template_vars={}):
         """
         Generate the PicoSoC top module (Verilog-based)
         """
+        # Check if the template exist
+        if not os.path.isfile(self.template_file):
+            raise OSError(f"File '{self.template_file}' not found!")
+        self.template = Template(open(self.template_file, 'r').read())
         # Render the top Verilog module
-        self.render(self.target_file, core_template_vars)
+        with open(self.target_file, 'w') as fp:
+            fp.write(self.template.safe_substitute(template_vars))
         # Generate the benchmark variables for the OpenFPGA task script
         self.core_files = ','.join([
             self.target_file,
-            f"{self.root_dir}/picosoc/simpleuart.v",
-            f"{self.root_dir}/picorv32.v",
+            f"{self.source_dir}/picosoc/simpleuart.v",
+            f"{self.source_dir}/picorv32.v",
         ])
 
     def configure_rv32i(self):
-        self.configure_core_files({
+        self._configure_core_files({
             "enable_mul"        : 0,
             "enable_div"        : 0,
             "enable_fast_mul"   : 0,
@@ -43,7 +46,7 @@ class PicoRV32(Template):
         })
 
     def configure_rv32im(self):
-        self.configure_core_files({
+        self._configure_core_files({
             "enable_mul"        : 1,
             "enable_div"        : 1,
             "enable_fast_mul"   : self.enable_fast_mul,
@@ -52,7 +55,7 @@ class PicoRV32(Template):
         })
 
     def configure_rv32imc(self):
-        self.configure_core_files({
+        self._configure_core_files({
             "enable_mul"        : 1,
             "enable_div"        : 1,
             "enable_fast_mul"   : self.enable_fast_mul,
@@ -61,7 +64,7 @@ class PicoRV32(Template):
         })
 
 
-class PicosocReport(ReportParser):
+class PicosocReport(BaseParser):
     """
     Define a report parser to catch the memory size post-simulation, looking
     inside the result directory (run_dir).
