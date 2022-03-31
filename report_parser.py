@@ -9,10 +9,7 @@ import csv
 import argparse
 from glob import glob
 from softcores import *
-from utils.parsers.yosys_report_parser import YosysReport
-from utils.parsers.vpr_report_parser import VprReports
-from utils.parsers.openfpga_shell_parser import OpenfpgaShell
-from utils.parsers.openfpga_task_parser import OpenfpgaTaskLogger
+from utils.parsers import *
 
 # ============================================================================
 #  Command-line arguments
@@ -62,7 +59,7 @@ def parse_rundir(dir_name, csv_file=None):
     if args.csv:
         csv_row = {}
     # Yosys logger (yosys_output.log)
-    rpt = YosysReport(searchdir=dir_name)
+    rpt = YosysLogParser(searchdir=dir_name)
     if args.debug:
         print(rpt)
     if args.csv:
@@ -73,7 +70,7 @@ def parse_rundir(dir_name, csv_file=None):
         print("[-] missing Yosys results, parsing avoided")
         return
     # VPR logger and stats (vpr_stdout.log, vpr_stat.result)
-    rpt = VprReports(searchdir=dir_name)
+    rpt = VprLogParser(searchdir=dir_name)
     if args.debug:
         print(rpt)
     if args.csv:
@@ -82,14 +79,14 @@ def parse_rundir(dir_name, csv_file=None):
         csv_row.update({f"vpr.{k}": v for k, v in rpt.logger.results.items()})
         csv_row.update({f"vpr.{k}": v for k, v in rpt.stats.results.items()})
     # OpenFPGA shell (VPR) parameters (*_run.openfpga)
-    params = OpenfpgaShell(searchdir=dir_name)
+    params = OpenfpgaShellParser(searchdir=dir_name)
     if args.debug:
         print(params)
     if args.csv:
         csv_file.add_headers(params.results.keys(), "params")
         csv_row.update({f"params.{k}": v for k, v in params.results.items()})
     # OpenFPGA task logger (*_out.log) => yosys_flow
-    params = OpenfpgaTaskLogger(searchdir=dir_name)
+    params = OpenfpgaTaskLogParser(searchdir=dir_name)
     if args.debug:
         print(params)
     if args.csv:
@@ -97,7 +94,7 @@ def parse_rundir(dir_name, csv_file=None):
         csv_row.update({f"params.{k}": v for k, v in params.results.items()})
     # Specific soft-core parsing section
     # Note: enable only if the file exist
-    core = PicosocReport(searchdir=dir_name)
+    core = PicosocParser(searchdir=dir_name)
     if os.path.isfile(core.filename):
         core.parse()
         if args.debug:

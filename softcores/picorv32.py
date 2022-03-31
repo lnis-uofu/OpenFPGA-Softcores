@@ -67,7 +67,7 @@ class PicoRV32(ProjectEnv):
         })
 
 
-class PicosocReport(BaseParser):
+class PicosocParser(BaseParser):
     """
     Define a report parser to catch the memory size post-simulation, looking
     inside the result directory (run_dir).

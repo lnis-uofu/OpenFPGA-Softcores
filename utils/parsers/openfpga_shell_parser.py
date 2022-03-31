@@ -4,7 +4,7 @@ import os
 from utils.parsers.base_parser import BaseParser
 
 
-class OpenfpgaShell(BaseParser):
+class OpenfpgaShellParser(BaseParser):
     def __init__(self,
                  filename  = "*_run.openfpga",
                  searchdir = os.path.join("run_dir", "latest")):

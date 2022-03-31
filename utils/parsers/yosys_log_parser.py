@@ -3,7 +3,7 @@
 import os
 from utils.parsers.base_parser import BaseParser
 
-class YosysReport(BaseParser):
+class YosysLogParser(BaseParser):
     def __init__(self,
                  logger_filename = "yosys_output.log",
                  searchdir       = os.path.join("run_dir", "latest")):

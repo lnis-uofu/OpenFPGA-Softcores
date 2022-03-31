@@ -3,7 +3,7 @@
 import os
 from utils.parsers.base_parser import BaseParser
 
-class OpenfpgaTaskLogger(BaseParser):
+class OpenfpgaTaskLogParser(BaseParser):
     def __init__(self,
                  filename  = "*_out.log",
                  searchdir = os.path.join("run_dir", "latest")):
