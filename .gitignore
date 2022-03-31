@@ -21,4 +21,4 @@ docs/_build/
 # Project specific
 build/
 run_dir/
-*.csv
+/*.csv
