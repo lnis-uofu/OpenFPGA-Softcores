@@ -98,7 +98,7 @@ opt -fast -nodffe -nosdff
 #########################
 # Map LUTs
 #########################
-abc -lut ${LUT_SIZE}
+abc9 -lut 4:${LUT_SIZE}
 
 #########################
 # Check and show statisitics

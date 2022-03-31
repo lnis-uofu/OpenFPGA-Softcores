@@ -26,6 +26,9 @@ class PicoRV32(ProjectEnv):
         if not os.path.isfile(self.template_file):
             raise OSError(f"File '{self.template_file}' not found!")
         self.template = Template(open(self.template_file, 'r').read())
+        # Create the output directory if missing
+        if not os.path.isdir(os.path.dirname(self.target_file)):
+            os.makedirs(os.path.dirname(self.target_file))
         # Render the top Verilog module
         with open(self.target_file, 'w') as fp:
             fp.write(self.template.safe_substitute(template_vars))

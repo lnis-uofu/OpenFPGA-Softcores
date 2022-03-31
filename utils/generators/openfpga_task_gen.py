@@ -44,6 +44,9 @@ class OpenfpgaTaskLauncher(ProjectEnv):
             "VPR_DEVICE_LAYOUT"     : self.device_layout,
             "VPR_CHANNEL_WIDTH"     : channel_width,
         }
+        # Create the output directory if missing
+        if not os.path.isdir(os.path.dirname(self.target_file)):
+            os.makedirs(os.path.dirname(self.target_file))
         # Render the OpenFPGA task file
         with open(self.target_file, 'w') as fp:
             fp.write(self.template.safe_substitute(task_vars))
