@@ -4,6 +4,22 @@ import os, re, time
 import numpy as np
 from collections import OrderedDict
 
+class Path(list):
+    """
+    Define the path object to describe and manipulate t
+    """
+    def __init__(self, *args, **kwargs):
+        # inherit from a list type
+        list.__init__(self, *args)
+        # additional parameter
+        self.number         = kwargs.get('number', None)
+        self.startpoint     = kwargs.get('startpoint', None)
+        self.endpoint       = kwargs.get('endpoint', None)
+        self.type           = kwargs.get('type', None)
+        self.arrival_time   = kwargs.get('arrival_time', None)
+        self.required_time  = kwargs.get('required_time', None)
+        self.slack_time     = kwargs.get('slack_time', None)
+
 
 class VprReportTimingParser(object):
     """
@@ -12,18 +28,34 @@ class VprReportTimingParser(object):
     evaluate wiring congestion of CLB/DSP/BRAM interfaces.
     """
 
-    # Define report file regular expressions
-    _reUnitScale        = re.compile(r'# Unit scale: (.+) seconds')
-    _rePathNumber       = re.compile(r'#Path (\d+)')
-    _reStartpoint       = re.compile(r'Startpoint:\s+([^\s]+)')
-    _reEndpoint         = re.compile(r'Endpoint\s*:\s+([^\s]+)')
-    _reRequiredTime     = re.compile(r'data required time\s+([^\s]+)')
-    _reArrivalTime      = re.compile(r'data arrival time\s+([^\s]+)')
-    _reSlackTime        = re.compile(r'slack \(\w+\)\s+([^\s]+)')
-    _reStartOfWireTable = re.compile(r'Point\s+Incr\s+Path')
-    _reWireInput        = re.compile(r'\$abc.+\$([^\.\$\[\]]+)\.in\[(\d+)\]')
-    _reWireOutput       = re.compile(r'\$abc.+\$([^\.\$\[\]]+)\.out\[(\d+)\]')
-    _reEndOfWireTable   = re.compile(r'data required time')
+    ## Define timing report regular expressions
+    # File information
+    _rcUnitScale        = re.compile(r'# Unit scale: (.+) seconds')
+    # Path information
+    _rcPathNumber       = re.compile(r'#Path (\d+)')
+    _rcStartpoint       = re.compile(r'Startpoint:\s+([^\s]+)')
+    _rcEndpoint         = re.compile(r'Endpoint\s*:\s+([^\s]+)')
+    _rcPathType         = re.compile(r'Path Type\s*:\s+([^\s]+)')
+    _rcArrivalTime      = re.compile(r'data arrival time\s+([\-\d\.]+)')
+    _rcRequiredTime     = re.compile(r'data required time\s+([\-\d\.]+)')
+    _rcSlackTime        = re.compile(r'slack .*\s+([\-\d\.]+)')
+    # For each point in the path list
+    _rcPathPoint        = re.compile(r'([^\s]+\[\d+\]) .*\s+([\d\.]+)\s+([\d\.]+)')
+    _rStartOfPointTable = r'({}) .*\s+([\d\.]+)\s+([\d\.]+)'
+    _rEndOfPointTable   = r'({}) .*\s+([\d\.]+)\s+([\d\.]+)'
+
+    ## Catch path description for a single regex with its associated attribute
+    ## and type casting.
+    _path_info = [
+        # regex, path-attribute, post-processing
+        (_rcPathNumber,     'number',           int),
+        (_rcStartpoint,     'startpoint',       str),
+        (_rcEndpoint,       'endpoint',         str),
+        (_rcPathType,       'type',             str),
+        (_rcArrivalTime,    'arrival_time',     float),
+        (_rcRequiredTime,   'required_time',    float),
+        (_rcSlackTime,      'slack_time',       float),
+    ]
 
     def __init__(self, filename):
         self.filename   = filename
@@ -36,7 +68,7 @@ class VprReportTimingParser(object):
         """For debbuging purpose: print(object)."""
         tim = []
         for p in self.paths:
-            tim.append(f"{p['number']:3}| slack: {p['slack_time']:.3f}, start: {p['startpoint']}, end: {p['endpoint']}, wires: {len(p['wires'])}")
+            tim.append(f"{p.number:3}| slack: {p.slack_time:.3f}, start: {p.startpoint}, end: {p.endpoint}, points: {len(p)}")
         return '\n'.join(tim)
 
     def __getitem__(self, idx):
@@ -49,69 +81,61 @@ class VprReportTimingParser(object):
         self.fileinfo['modified_datetime'] = time.ctime(os.path.getmtime(self.filename))
         # Parse the report timing file
         with open(self.filename, 'r') as fp:
-            path  = dict()
-            wires = list()
+            path  = Path()
             token = False
             for line in fp.readlines():
                 line = line.rstrip()
-                # Unit scale
-                m = self._reUnitScale.match(line)
-                if m: self.fileinfo.update({'unit_scale' :  m.group(1).strip()})
-                # Path number
-                m = self._rePathNumber.match(line)
-                if m: path['number'] = int(m.group(1))
-                # Start point
-                m = self._reStartpoint.match(line)
-                if m: path['startpoint'] = m.group(1)
-                # End point
-                m = self._reEndpoint.match(line)
-                if m: path['endpoint'] = m.group(1)
-                # Required time
-                m = self._reRequiredTime.match(line)
-                if m: path['required_time'] = float(m.group(1))
-                # Arrival time
-                m = self._reArrivalTime.match(line)
-                if m: path['arrival_time'] = float(m.group(1))
-                # Slack time (last item to catch)
-                m = self._reSlackTime.match(line)
+                ## File information
+                m = self._rcUnitScale.match(line)
                 if m:
-                    path['slack_time'] = float(m.group(1))
+                    self.fileinfo['unit_scale'] = m.group(1).strip()
+                ## Path information
+                for regex, attrib, fmt in self._path_info:
+                    m = regex.match(line)
+                    if m:
+                        setattr(path, attrib, fmt(m.group(1)))
+                # end of path and loop breaker
+                if self._rcSlackTime.match(line):
                     self.paths.append(path)
-                    # if we limit the exploration for a given number of paths
-                    if len(self.paths) >= nb_paths:
+                    if path.number >= nb_paths:
                         break
-                    path = dict()
-                # Wire table
-                if self._reStartOfWireTable.match(line) and not token:
+                    path = Path()
+                ## Point table
+                if path.startpoint is None or path.endpoint is None:
+                    continue
+                # from the startpoint...
+                regex = self._rStartOfPointTable.format(re.escape(path.startpoint))
+                if re.match(regex, line) and not token:
                     token = True
-                if self._reEndOfWireTable.match(line) and token:
+                # ...for each point...
+                m = self._rcPathPoint.match(line)
+                if m and token:
+                    # add a new point in the path list
+                    path.append({
+                        'point' : m.group(1),
+                        'incr'  : float(m.group(2)),
+                        'sum'   : float(m.group(3)),
+                    })
+                # ...to the endpoint
+                regex = self._rEndOfPointTable.format(re.escape(path.endpoint))
+                if re.match(regex, line) and token:
                     token = False
-                    path['wires'] = list(wires)
-                    wires = list()
-                # Input wire
-                m = self._reWireInput.match(line)
-                if m and token:
-                    wires.append([f"{m.group(1)}[{m.group(2)}]"])
-                # Output wire
-                m = self._reWireOutput.match(line)
-                if m and token:
-                    wires[-1].append(f"{m.group(1)}[{m.group(2)}]")
         # Create group of paths
         for p in self.paths:
-            if p['startpoint'] in self.groups:
-                self.groups[p['startpoint']]['end_list'].append(p['endpoint'])
-                self.groups[p['startpoint']]['total'] += 1
+            if p.startpoint in self.groups:
+                self.groups[p.startpoint]['end_list'].append(p.endpoint)
+                self.groups[p.startpoint]['total'] += 1
                 continue
-            self.groups[p['startpoint']] = {
-                'end'       : p['endpoint'],
-                'end_list'  : [p['endpoint']],
+            self.groups[p.startpoint] = {
+                'end'       : p.endpoint,
+                'end_list'  : [p.endpoint],
                 'total'     : 1,
             }
         # Calculate statistics
         if not self.paths:
             return
-        high = self.paths[0]['arrival_time']
-        low  = self.paths[-1]['arrival_time']
+        high = self.paths[0].arrival_time
+        low  = self.paths[-1].arrival_time
         self.stats.update({
             'highest_arrival_time'  : high,
             'lowest_arrival_time'   : low,
