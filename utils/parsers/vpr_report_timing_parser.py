@@ -6,13 +6,14 @@ from collections import OrderedDict
 
 class Path(list):
     """
-    Define the path object to describe and manipulate t
+    Define the path object to store path properties and manipulate each point
+    composing the path like a Python list object.
     """
     def __init__(self, *args, **kwargs):
         # inherit from a list type
         list.__init__(self, *args)
-        # additional parameter
-        self.number         = kwargs.get('number', None)
+        # path properties
+        self.id             = kwargs.get('id', None)
         self.startpoint     = kwargs.get('startpoint', None)
         self.endpoint       = kwargs.get('endpoint', None)
         self.type           = kwargs.get('type', None)
@@ -48,7 +49,7 @@ class VprReportTimingParser(object):
     ## and type casting.
     _path_info = [
         # regex, path-attribute, post-processing
-        (_rcPathNumber,     'number',           int),
+        (_rcPathNumber,     'id',               int),
         (_rcStartpoint,     'startpoint',       str),
         (_rcEndpoint,       'endpoint',         str),
         (_rcPathType,       'type',             str),
@@ -57,25 +58,27 @@ class VprReportTimingParser(object):
         (_rcSlackTime,      'slack_time',       float),
     ]
 
-    def __init__(self, filename):
+    def __init__(self, filename, nb_paths=100):
         self.filename   = filename
+        self.nb_paths   = nb_paths
         self.fileinfo   = {}            # store all file information
         self.paths      = []            # list all paths of the files
         self.groups     = OrderedDict() # list all group of paths
         self.stats      = OrderedDict() # store statistics of paths
+        self.parse()
 
     def __str__(self):
         """For debbuging purpose: print(object)."""
         tim = []
         for p in self.paths:
-            tim.append(f"{p.number:3}| slack: {p.slack_time:.3f}, start: {p.startpoint}, end: {p.endpoint}, points: {len(p)}")
+            tim.append(f"{p.id:3}| slack: {p.slack_time:.3f}, start: {p.startpoint}, end: {p.endpoint}, points: {len(p)}")
         return '\n'.join(tim)
 
     def __getitem__(self, idx):
         """Use this class as a list, in order to iterate each path."""
         return self.paths[idx]
 
-    def parse(self, nb_paths=100):
+    def parse(self):
         """Parse the report file using the class regex."""
         # Get file updated date and time
         self.fileinfo['modified_datetime'] = time.ctime(os.path.getmtime(self.filename))
@@ -97,7 +100,7 @@ class VprReportTimingParser(object):
                 # end of path and loop breaker
                 if self._rcSlackTime.match(line):
                     self.paths.append(path)
-                    if path.number >= nb_paths:
+                    if path.id >= self.nb_paths:
                         break
                     path = Path()
                 ## Point table
@@ -178,8 +181,7 @@ if __name__ == "__main__":
                     help="print only statistics")
     args = ap.parse_args()
 
-    rpt = VprReportTimingParser(args.report_filename)
-    rpt.parse(args.nb_paths)
+    rpt = VprReportTimingParser(args.report_filename, args.nb_paths)
     if args.debug and not args.stats:
         pprint(rpt.paths)
     # print all paths

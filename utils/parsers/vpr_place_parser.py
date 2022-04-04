@@ -23,6 +23,7 @@ class VprPlaceParser(object):
         self.array_size   = (None, None)
         self._block_ids   = {} # save all block by block id
         self._block_names = {} # save all block by block names
+        self.parse()
 
     def parse(self):
         """Parse the place file using the class regex."""

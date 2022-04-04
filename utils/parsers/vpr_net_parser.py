@@ -59,10 +59,11 @@ class VprNetParser(object):
     - Endpoints are inputs, listed in the *.route report.
     """
 
-    def __init__(self, xml_filename, debug=False):
-        self.tree  = ET.parse(xml_filename)
-        self.root  = self.tree.getroot()
-        self.debug = debug
+    def __init__(self, filename, debug=False):
+        self.filename   = filename
+        self.debug      = debug
+        self.tree       = ET.parse(filename)
+        self.root       = self.tree.getroot()
 
     def _find_instance(self, block, top, hier=[]):
         """

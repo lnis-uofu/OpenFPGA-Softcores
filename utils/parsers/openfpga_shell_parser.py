@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-from utils.parsers.base_parser import BaseParser
+from .base_parser import BaseParser
 
 
 class OpenfpgaShellParser(BaseParser):

@@ -146,6 +146,7 @@ class VprRouteParser(object):
         self._gnet_ids  = {} # get the corresponding global net ID
         self._nets      = {} # store all nets by ID
         self._gnets     = {} # store all global nets by ID
+        self.parse()
 
     def _format_group(self, groupdict):
         """Format all value in the regex groupdict using the defined rules."""
