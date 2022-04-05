@@ -19,6 +19,8 @@ __pycache__/
 docs/_build/
 
 # Project specific
-build/
-run_dir/
 /*.csv
+/*.rpt
+build/
+outputs/
+run_dir/
