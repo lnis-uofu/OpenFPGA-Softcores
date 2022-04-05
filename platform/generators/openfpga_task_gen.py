@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
 
 import os, sys, re
+from os.path import abspath, dirname, join
 from string import Template
-from utils.project import ProjectEnv
+from utils import ProjectEnv
+
+
+## Check if the OPENFPGA_PATH environment variable exist
+if not os.environ.get('OPENFPGA_PATH', None):
+    raise RuntimeError("Please source 'openfpga.sh' script in the OpenFPGA github repo first!")
 
 
 class OpenfpgaTaskLauncher(ProjectEnv):
     """
     Class used to generate OpenFPGA task (.conf) launchers.
     """
+
+    # OpenFPGA variable for running the simulations
+    openfpga_path       = os.environ['OPENFPGA_PATH']
+    openfpga_script_dir = abspath(join(openfpga_path,"openfpga_flow","scripts"))
+    openfpga_run_task   = abspath(join(openfpga_script_dir,"run_fpga_task.py"))
+
     def __init__(self, template_file, output_dir='.', **kwargs):
         # prepare the template and target files
         self.template_file  = os.path.abspath(template_file)
@@ -38,7 +50,7 @@ class OpenfpgaTaskLauncher(ProjectEnv):
             channel_width = self.channel_width
         # Generate the OpenFPGA task configuration file
         task_vars = {
-            "PROJECT_DIR"           : self.project_dir,
+            "PROJECT_DIR"           : self.project_path,
             "BENCH_FILES"           : self.bench_files,
             "BENCH_TOP_MODULE"      : self.bench_top_module,
             "VPR_DEVICE_LAYOUT"     : self.device_layout,
@@ -59,5 +71,5 @@ class OpenfpgaTaskLauncher(ProjectEnv):
         if debug:
             task_options.append("--debug")
         task_options = ' '.join(task_options)
-        os.system(f"python3 {self.run_fpga_task} {self.output_dir} {task_options}")
+        os.system(f"python3 {self.openfpga_run_task} {self.output_dir} {task_options}")
 

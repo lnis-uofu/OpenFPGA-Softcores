@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import os
 from string import Template
-from utils.project import ProjectEnv
-from utils.parsers.base_parser import BaseParser
+from utils import ProjectEnv
+from parsers.base_parser import BaseParser
 
 class PicoRV32(ProjectEnv):
 
@@ -11,8 +12,8 @@ class PicoRV32(ProjectEnv):
         # softcore parameters
         self.output_dir      = os.path.abspath(output_dir)
         self.top_module      = "picosoc"
-        self.template_file   = os.path.join(self.softcore_tmpl_dir, "picosoc.v")
-        self.source_dir      = os.path.join(self.third_party_dir, "picorv32")
+        self.template_file   = os.path.join(self.softcore_tmpl_path, "picosoc.v")
+        self.source_dir      = os.path.join(self.third_party_path, "picorv32")
         self.target_file     = os.path.join(self.output_dir, "picosoc.v")
         # optional parameters
         self.memory_size     = kwargs.get('memory_size', 1024)
@@ -35,8 +36,8 @@ class PicoRV32(ProjectEnv):
         # Generate the benchmark variables for the OpenFPGA task script
         self.core_files = ','.join([
             self.target_file,
-            f"{self.source_dir}/picosoc/simpleuart.v",
-            f"{self.source_dir}/picorv32.v",
+            os.path.join(self.source_dir, "picosoc", "simpleuart.v"),
+            os.path.join(self.source_dir, "picorv32.v"),
         ])
 
     def configure_rv32i(self):

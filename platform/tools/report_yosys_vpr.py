@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 """
 Just another Python report parser of Yosys and VPR results and reports.
 """
 
 import os
+import sys
 import csv
 import argparse
 from glob import glob
+
+# 'tools/' is a sibling folders of 'parsers/', the following command ensures
+# the import of libraries from the sibling folder.
+sys.path.append(os.path.dirname(os.path.abspath(os.path.join(__file__, ".."))))
+
 from softcores import *
-from utils.parsers import *
+from parsers import *
 
 # ============================================================================
 #  Command-line arguments
@@ -19,15 +26,25 @@ ap = argparse.ArgumentParser(
     formatter_class = argparse.RawTextHelpFormatter
 )
 # positional arguments
-ap.add_argument('search_path', nargs='*', metavar='<search-path>',
-                help="Specify a base directory to search reports (default: '%(default)s')",
-                default=os.path.join("run_dir", "latest"))
+ap.add_argument(
+    'search_path',
+    nargs   = '*',
+    metavar = '<search-path>',
+    default = os.path.join("run_dir", "latest"),
+    help    = "Specify a base directory to search reports (default: '%(default)s')",
+)
 # optional arguments
-ap.add_argument('-d', '--debug', action='store_true', dest='debug',
-                help="Enable debug mode")
-ap.add_argument('-o', '--output', nargs='?', metavar="<csv-file>", dest="csv",
-                help="Save in CSV format (default: %(default)s)",
-                default="report_parser.csv")
+ap.add_argument(
+    '-d', '--debug',
+    action  = 'store_true',
+    help    = "Enable debug mode",
+)
+ap.add_argument(
+    '-o', '--output',
+    metavar = "<csv-file>",
+    default = os.path.join("outputs", "report_parser.csv"),
+    help    = "Save in CSV format (default: %(default)s)",
+)
 # parse the user arguments
 args = ap.parse_args()
 
@@ -56,13 +73,13 @@ def parse_rundir(dir_name, csv_file=None):
     Parse the different report, results files
     """
     # create a new line of the csv file
-    if args.csv:
+    if args.output:
         csv_row = {}
     # Yosys logger (yosys_output.log)
     rpt = YosysLogParser(searchdir=dir_name)
     if args.debug:
         print(rpt)
-    if args.csv:
+    if args.output:
         csv_file.add_headers(rpt.results.keys(), "yosys")
         csv_row.update({f"yosys.{k}": v for k, v in rpt.results.items()})
     # Note: abort parsing if there is no yosys results
@@ -73,7 +90,7 @@ def parse_rundir(dir_name, csv_file=None):
     rpt = VprLogParser(searchdir=dir_name)
     if args.debug:
         print(rpt)
-    if args.csv:
+    if args.output:
         csv_file.add_headers(rpt.logger.results.keys(), "vpr")
         csv_file.add_headers(rpt.stats.results.keys(), "vpr")
         csv_row.update({f"vpr.{k}": v for k, v in rpt.logger.results.items()})
@@ -82,14 +99,14 @@ def parse_rundir(dir_name, csv_file=None):
     params = OpenfpgaShellParser(searchdir=dir_name)
     if args.debug:
         print(params)
-    if args.csv:
+    if args.output:
         csv_file.add_headers(params.results.keys(), "params")
         csv_row.update({f"params.{k}": v for k, v in params.results.items()})
     # OpenFPGA task logger (*_out.log) => yosys_flow
     params = OpenfpgaTaskLogParser(searchdir=dir_name)
     if args.debug:
         print(params)
-    if args.csv:
+    if args.output:
         csv_file.add_headers(params.results.keys(), "params")
         csv_row.update({f"params.{k}": v for k, v in params.results.items()})
     # Specific soft-core parsing section
@@ -99,11 +116,11 @@ def parse_rundir(dir_name, csv_file=None):
         core.parse()
         if args.debug:
             print(core)
-        if args.csv:
+        if args.output:
             csv_file.add_headers(core.results.keys(), "params")
             csv_row.update({f"params.{k}": v for k, v in core.results.items()})
     # add a new csv line
-    if args.csv:
+    if args.output:
         csv_file.content.append(csv_row)
     print(f"[+] '{dir_name}' content parsed!")
 
@@ -115,21 +132,21 @@ if __name__ == "__main__":
 
     # the debug mode will override the default CSV generation
     if args.debug:
-        args.csv = None
+        args.output = None
         print(f"[+] No CSV output file generated in debug mode!")
     else:
-        print(f"[+] CSV output file: '{args.csv}'")
+        print(f"[+] CSV output file: '{args.output}'")
 
     # prepare the CSV output file
     csv_file = None
-    if args.csv:
-        csv_file = CSVFile(args.csv)
+    if args.output:
+        csv_file = CSVFile(args.output)
 
     # look over the different run directories
     for dir_name in args.search_path:
         parse_rundir(dir_name, csv_file)
 
     # Save the output CSV file
-    if args.csv:
+    if args.output:
         csv_file.save()
 

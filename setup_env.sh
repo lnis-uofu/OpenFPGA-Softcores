@@ -15,7 +15,6 @@ fi
 if [ -z $OPENFPGA_PATH ]; then
     echo "[ERROR] 'OPENFPGA_PATH' environment variable not found!"
     echo "[INFO ] Source the 'openfpga.sh' first, before running soft-core simulations."
-    return 1
 fi
 
 # Project enviroment
