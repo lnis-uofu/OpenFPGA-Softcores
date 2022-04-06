@@ -10,6 +10,7 @@ coordinates, ...) using VPR *.net and *.place reports.
 import os
 import sys
 import argparse
+import numpy as np
 from glob import glob
 
 # 'tools/' is a sibling folders of 'parsers/', the following command ensures
@@ -29,7 +30,6 @@ def parse_args():
     # positional arguments
     ap.add_argument(
         'search_path',
-        nargs   = '?',
         metavar = '<search-path>',
         default = os.path.join("run_dir", "latest"),
         help    = "root path to recursively search report files (default: '%(default)s')",
@@ -68,6 +68,31 @@ def find_filename(path, filename):
         sys.exit(1)
     return file[0]
 
+## Evaluate the Manhattan distance regarding to point placement
+def manhattan_analysis(table):
+    x1, y1 = table[0]['x'], table[0]['y']
+    x2, y2 = table[-1]['x'], table[-1]['y']
+    # Manhattan distance
+    mw, mh = np.abs(x1 - x2), np.abs(y1 - y2)
+    # path distance
+    dw, dh = 0, 0
+    # for each point in the net calculate the path distance
+    for line in table[1:]:
+        x2, y2 = line['x'], line['y']
+        dw    += np.abs(x1 - x2)
+        dh    += np.abs(y1 - y2)
+        x1, y1 = x2, y2
+    return {
+        'euclidean' : np.sqrt(mw**2 + mh**2),
+        'manhattan' : mw + mh,
+        'm_width'   : mw,
+        'm_height'  : mh,
+        'distance'  : dw + dh,
+        'd_width'   : dw,
+        'd_height'  : dh,
+        'm_ratio'   : (dw + dh) / float(mw + mh),
+    }
+
 ## Print data (list of dict) in a table format
 def print_table(data, headers, sepwidth=2, precision=3, stream=sys.stdout):
     # measure column widths
@@ -91,8 +116,37 @@ def print_table(data, headers, sepwidth=2, precision=3, stream=sys.stdout):
             else:
                 line.append(f"{row[col]:{w}}")
         print((' '*sepwidth).join(line), file=stream)
-    if stream is not sys.stdout:
-        print("-"*len(head)+'\n', file=stream)
+    print("-"*len(head), file=stream)
+
+## Print statistics of the path
+def print_statistics(table, stream=sys.stdout):
+    # timing statistics
+    nb_of_pb = 0                # number of PB the path goes through
+    net_time, pb_time = 0, 0    # timings
+    prev = table[0]['id']
+    for point in table[1:]:
+        if point['id'] == prev:
+            pb_time += point['incr']
+        else:
+            net_time += point['incr']
+            nb_of_pb += 1
+        prev = point['id']
+    path = {
+        'start'         : f"{table[0]['type']}[{table[0]['id']}]",
+        'end'           : f"{table[-1]['type']}[{table[-1]['id']}]",
+        'inter_pb'      : nb_of_pb - 1,
+        'arrival_time'  : table[-1]['sum'],
+        'path_time'     : table[-1]['sum'] - table[0]['sum'],
+        'net_time'      : net_time,
+        'inter_pb_time' : pb_time,
+    }
+    dist = manhattan_analysis(table)
+    print("Path instance-to-instance   : {start} -> {end} (inter-PB: {inter_pb})".format(**path), file=stream)
+    print("Data arrival time           : {arrival_time:.2f}".format(**path), file=stream)
+    print("Path time (no clk-to-output): {path_time:.2f} (net: {net_time:.2f}, inter-PB: {inter_pb_time:.2f})".format(**path), file=stream)
+    print("Manhattan distance          : {manhattan:4} (width: {m_width}, height: {m_height})".format(**dist), file=stream)
+    print("Point-to-point path distance: {distance:4} (width: {d_width}, height: {d_height})".format(**dist), file=stream)
+    print("Distance ratio              : {m_ratio:.2f}".format(**dist), file=stream)
 
 ## Print a given path using a table format
 def print_path(path_id, ftiming, fnet, fplace, stream=sys.stdout):
@@ -130,8 +184,14 @@ def print_path(path_id, ftiming, fnet, fplace, stream=sys.stdout):
             'pin'   : direc,
             'id'    : block.id,
             'coord' : f"({x:2},{y:2})",
+            'x'     : x,
+            'y'     : y,
         })
     print_table(table, headers, stream=stream)
+    print_statistics(table, stream=stream)
+    # separte path in the output file
+    if stream is not sys.stdout:
+        print(file=stream)
 
 def main():
     # save user arguments

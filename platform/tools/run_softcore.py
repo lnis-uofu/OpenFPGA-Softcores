@@ -73,7 +73,6 @@ ap.add_argument(
 ap.add_argument(
     '--channel-width',
     metavar = "<integer>",
-    type    = int,
     default = "auto",
     help    = "Define a fixed FPGA channel width (default: %(default)s)",
 )
