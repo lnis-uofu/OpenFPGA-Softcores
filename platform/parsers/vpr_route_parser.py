@@ -11,13 +11,48 @@ class Net(list):
         # inherit from a list type
         list.__init__(self, *args)
         # net properties
-        self.id         = kwargs.get('id', None)
-        self.endpoint   = kwargs.get('endpoint', None)
-        # alternate arguments
-        if self.id is None:
-            self.id = kwargs.get('net_id', None)
-        if self.endpoint is None:
-            self.endpoint = kwargs.get('name', None)
+        self.id   = kwargs.get('id', None)
+        self.name = kwargs.get('name', None)
+
+    def get_route(self, start, end):
+        """Retrace the net path between nodes."""
+        assert isinstance(start, tuple), "Wrong 'start' tuple"
+        assert isinstance(end, tuple), "Wrong 'end' tuple"
+        # save the list of node ids and node positions
+        node_ids, path = [], []
+        opin_name, ipin_name = None, None
+        # for each node of the net
+        for node in self:
+            node_type = node['node_type']
+            if node_type == "opin":
+                # found the output pin (start)
+                if node['x'] == start[0] and node['y'] == start[1]:
+                    opin_name = node['pin_name']
+            if opin_name is None:
+                continue
+            # ignore source and sink types
+            if node_type in ["chanx", "chany", "ipin", "opin"]:
+                # multiple input net
+                if node['node_id'] in node_ids:
+                    index    = node_ids.index(node['node_id'])
+                    node_ids = node_ids[:index]
+                    path     = path[:index]
+                # append all lists
+                node_ids.append(node['node_id'])
+                path.append((node['x'], node['y']))
+            if node_type == "ipin":
+                # found the input pin (end)
+                if node['x'] == end[0] and node['y'] == end[1]:
+                    ipin_name = node['pin_name']
+                    break
+                else:
+                    # remove the last ipin saved
+                    node_ids.pop()
+                    path.pop()
+        # if the path is not found
+        if opin_name is None or ipin_name is None:
+            return None
+        return node_ids, path, opin_name, ipin_name
 
 
 class VprRouteParser(object):
@@ -40,8 +75,8 @@ class VprRouteParser(object):
     _rcArraySize= re.compile(r'Array size: (\d+) x (\d+) logic blocks')
 
     # Define regex for Net, Node and Block parsing
-    _rNetId     = '(?P<net_id>\d+)'
-    _rEndpoint  = r'\((?P<endpoint>[^\)]+)\)'
+    _rNetId     = r'(?P<id>\d+)'
+    _rEndpoint  = r'\((?P<name>[^\)]+)\)'
     _rNodeId    = r'(?P<node_id>\d+)'
     _rCoords    = r'\((?P<x>\d+),(?P<y>\d+)\)'
     _rCoordsTo  = r'to\s+\((?P<to_x>\d+),(?P<to_y>\d+)\)'
@@ -90,10 +125,10 @@ class VprRouteParser(object):
     _rcSourceTo = re.compile(_rSource+r'\s+'+_rCoordsTo+r'\s+'+_rClassId+r'\s+'+_rSwitchId)
     _rcSourcePad= re.compile(_rSource+r'\s+'+_rPadId+r'\s+'+_rSwitchId)
 
-    # Post-casting format of regex results
+    # Post-formatting of regex results
     _regex_post_fmt = {
-        'net_id'        : int,
-        'endpoint'      : str,
+        'id'            : int,
+        'name'          : str,
         'node_id'       : int,
         'x'             : int,
         'y'             : int,
@@ -194,8 +229,8 @@ class VprRouteParser(object):
                 if m:
                     # add the last net to the database of nets
                     if net is not None:
-                        self._nets[net.id]          = net
-                        self._net_ids[net.endpoint] = net.id
+                        self._nets[net.id]      = net
+                        self._net_ids[net.name] = net.id
                     # create a new net object
                     net = Net(**self._format_group(m.groupdict()))
                     continue
@@ -203,8 +238,8 @@ class VprRouteParser(object):
                 m = self._rcGlobalNet.match(line)
                 if m:
                     if gnet is not None:
-                        self._gnets[gnet.id]          = gnet
-                        self._gnet_ids[gnet.endpoint] = gnet.id
+                        self._gnets[gnet.id]      = gnet
+                        self._gnet_ids[gnet.name] = gnet.id
                     gnet = Net(**self._format_group(m.groupdict()))
                     continue
                 # prevent from file header
@@ -236,18 +271,18 @@ class VprRouteParser(object):
                 print(f"[-] Warning missing regex for:{line}")
             # do not forget to add the latest net id
             if net is not None:
-                self._nets[net.id]              = net
-                self._net_ids[net.endpoint]     = net.id
+                self._nets[net.id]        = net
+                self._net_ids[net.name]   = net.id
             if gnet is not None:
-                self._gnets[gnet.id]            = gnet
-                self._gnet_ids[gnet.endpoint]   = gnet.id
+                self._gnets[gnet.id]      = gnet
+                self._gnet_ids[gnet.name] = gnet.id
 
     def get_net(self, net_id_or_name):
-        """Return the net object using the id or the endpoint."""
+        """Return the net object using the id or the name."""
         return self._get_net(net_id_or_name, self._nets, self._net_ids)
 
     def get_global_net(self, net_id_or_name):
-        """Return the global net object using the id or the endpoint."""
+        """Return the global net object using the id or the name."""
         return self._get_net(net_id_or_name, self._gnets, self._gnet_ids)
 
     def print_net(self, net_id_or_name):
@@ -275,18 +310,29 @@ if __name__ == "__main__":
                     help="VPR route file to parse")
     ap.add_argument('-d', '--debug', action='store_true',
                     help="print debugging information")
-    ap.add_argument('--net-id', type=int,
+    ap.add_argument('--net-id', type=int, action = 'store',
+                    default=0,
                     help="print a net using its id reference")
     ap.add_argument('--net-name', type=str,
-                    help="print a net using its endpoint reference")
+                    help="print a net using its name reference (use ' to wrap the string)")
     args = ap.parse_args()
 
     rpt = VprRouteParser(args.route_filename)
     rpt.parse()
     if args.net_id:
-        rpt.print_net(args.net_id)
+        print(f"Net id: {args.net_id}")
+        net = rpt.get_net(args.net_id)
+        if net is not None:
+            print(f"Net name: {net.name}")
+            rpt.print_net(args.net_id)
+        else:
+            print("[-] Net not found!")
     elif args.net_name:
-        rpt.print_net(args.net_name)
-    else:
-        rpt.print_net(0)
+        print(f"Net name: {args.net_name}")
+        net = rpt.get_net(args.net_name)
+        if net is not None:
+            print(f"Net id: {net.id}")
+            rpt.print_net(args.net_name)
+        else:
+            print("[-] Net not found!")
 
