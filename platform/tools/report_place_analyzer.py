@@ -53,6 +53,11 @@ def parse_args():
         help    = "parse the hold report timing file",
     )
     ap.add_argument(
+        '--pre-pack',
+        action  = 'store_true',
+        help    = "parse the pre-pack report timing file",
+    )
+    ap.add_argument(
         '-o', '--output',
         metavar = "<rpt-file>",
         help    = "analyze all paths in the report file and save them",
@@ -112,7 +117,7 @@ def print_table(data, headers, sepwidth=2, precision=3, stream=sys.stdout):
         line = []
         for (col, _), w in zip(headers, widths):
             if isinstance(row[col], float):
-                line.append(f"{row[col]:{w-1-precision}.{precision}f}")
+                line.append(f"{row[col]:{w}.{precision}f}")
             else:
                 line.append(f"{row[col]:{w}}")
         print((' '*sepwidth).join(line), file=stream)
@@ -178,8 +183,8 @@ def print_path(path_id, ftiming, fnet, fplace, stream=sys.stdout):
         # table row
         table.append({
             'point' : pname,
-            'incr'  : point['incr'],
-            'sum'   : point['sum'],
+            'incr'  : point['t_incr'],
+            'sum'   : point['t_sum'],
             'type'  : block.type,
             'pin'   : direc,
             'id'    : block.id,
@@ -199,9 +204,10 @@ def main():
 
     # setup/hold report timing file
     setuphold = "hold" if args.hold else "setup"
+    prepack   = "pre_pack." if args.pre_pack else ""
     # glob search
     search_root = os.path.join(args.search_path, "**")
-    tim = find_filename(search_root, f"report_timing.{setuphold}.rpt")
+    tim = find_filename(search_root, f"{prepack}report_timing.{setuphold}.rpt")
     net = find_filename(search_root, "*.net")
     plc = find_filename(search_root, "*.place")
 
