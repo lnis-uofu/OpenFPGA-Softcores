@@ -3,7 +3,6 @@
 
 import os
 import numpy as np
-from threading import Lock, Thread
 
 
 class PathBuilder(object):
@@ -53,44 +52,22 @@ class PathBuilder(object):
 
     def get_placements(self):
         """Create a table of point with additional information."""
-        # use multi-threading
-        lock        = Lock()
-        threads     = []
-        # create threads
-        for idx, point in enumerate(self._path):
-            threads.append(Thread(target=self._find_block_task, args=(lock,idx)))
-        # launch every tasks
-        for thread in threads:
-            thread.start()
-        # wait/synchro
-        for thread in threads:
-            thread.join()
-        # FIXME: instance names mapped on the physical block are correct for the
-        # output pin signals only. Thus, for the last point, we are using the
-        # last output point pin name.
-        if len(self._path) == 2:
-            self._path[-1]['inst'] = '.'.join(self._path[-1]['point'].split('.')[:-1])
-        else:
-            self._path[-1]['inst'] = self._path[-2]['inst']
+        # for each point in the path
+        for point in self._path:
+            block   = self._net.find_block(point['point'])
+            x,y,sub = self._place.get_coordinates(block.id)
+            point.update({
+                'inst'      : block.pin_name,
+                'pb_direct' : block.direction[:-3],
+                'pb_type'   : block.type,
+                'pb_id'     : block.id,
+                'coords'    : f"({x:2},{y:2})",
+                'x'         : x,
+                'y'         : y,
+            })
         # update object
         self.start_pb   = "{pb_type}[{pb_id}]".format(**self._path[0])
         self.end_pb     = "{pb_type}[{pb_id}]".format(**self._path[-1])
-
-    def _find_block_task(self, lock, index):
-        """Parallel thread due to slow find_block process."""
-        block   = self._net.find_block(self._path[index]['point'])
-        x,y,sub = self._place.get_coordinates(block.id)
-        lock.acquire()
-        self._path[index].update({
-            'inst'      : block.pin_name,
-            'pb_direct' : block.direction[:-3],
-            'pb_type'   : block.type,
-            'pb_id'     : block.id,
-            'coords'    : f"({x:2},{y:2})",
-            'x'         : x,
-            'y'         : y,
-        })
-        lock.release()
 
     def get_statistics(self):
         """Evaluate path timings and inter-blocks."""

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os, re
+import functools
 try:
     # Try for the fast c-based version first
     import xml.etree.cElementTree as ET
@@ -65,14 +66,14 @@ class VprNetParser(object):
         self.tree       = ET.parse(filename)
         self.root       = self.tree.getroot()
 
-    def _find_instance(self, block, top, hier=[]):
+    def _find_instance(self, block, parent, hier=[]):
         """
         Recursively find a given block name inside a block object, and return
         the corresponding block, port and pin objects.
         """
         assert isinstance(block, Block), "Wrong 'block' type"
         # for each sub-block
-        for subb in top.findall('block'):
+        for subb in parent.findall('block'):
             # add a level of hierachy, if with have block children
             hier.append(subb.attrib['instance'])
             # recursive look-up
@@ -82,16 +83,17 @@ class VprNetParser(object):
             # remove the last level if the block is not found
             hier.pop()
         # search for the block name
-        block_obj = top.find(f"./block/[@name='{block.name}']")
+        block_obj = parent.find(f"./block/[@name='{block.name}']")
         if block_obj:
             # search through the various port types
-            for port_obj in block_obj.getchildren():
+            for port_obj in block_obj:
                 pin_obj = port_obj.find(f"./port/[@name='{block.port_name}']")
                 # RG: that None condition must be written this way to work
                 if pin_obj is not None:
-                    return block_obj, port_obj, pin_obj
+                    return parent, block_obj, port_obj, pin_obj
         return None
 
+    @functools.cache
     def find_block(self, point_name):
         """
         Return a block structure with the corresponding block info else None.
@@ -101,7 +103,7 @@ class VprNetParser(object):
         instance = self._find_instance(block, self.root, block.hierarchy)
         if instance is None:
             return pdebug(f"No '{block.name}' found in the hierarchy", self.debug)
-        block_obj, port_obj, pin_obj = instance
+        parent_obj, block_obj, port_obj, pin_obj = instance
         # add the direction
         block.direction = port_obj.tag.rstrip('s')
         # add the last instance
@@ -112,12 +114,21 @@ class VprNetParser(object):
             block.type = m.group(1)
             block.id   = int(m.group(2))
         # get the pin name
+        # XXX: instance pin names mapped on the physical block are different
+        # according to the PB type (clb, dpram, dsp).
+        # Memory PB type will map the input signal at the parent block level
+        if block.hierarchy[0].startswith("memory") and block.direction.startswith("in"):
+             pin_obj = parent_obj.find(f"./inputs/port/[@name='{block.port_name}']")
+        # default cases, take the block signals
         if not hasattr(pin_obj, "text"):
             return pdebug(f"Missing text attribute in the pin structure", self.debug)
         pin_list = pin_obj.text.split()
         if block.pin_numb > len(pin_list):
             return pdebug(f"pin number out of bound", self.debug)
         block.pin_name = pin_list[block.pin_numb]
+        # CLB PB type will keep the same pin name as the block name
+        if block.hierarchy[0].startswith("clb"):
+            block.pin_name = block.name
         # return the block object
         return block
 
@@ -165,4 +176,6 @@ if __name__ == "__main__":
     vnp.print_point("$abc$136328$flatten\cpu.$0\decoded_rs1[4:0][3].in[0]")
     vnp.print_point("$abc$136328$flatten\cpu.$0\decoded_rs1[4:0][3].out[0]")
     vnp.print_point("$abc$136328$auto$mem.cc:1149:emulate_transparency$6488[0].raddr[6]")
+    vnp.print_point("$techmap5610$flatten\cpu.\genblk1.pcpi_mul.$mul$./benchmark/picorv32.v:2366$857.Y[0].A[1]")
+    vnp.print_point("$techmap5610$flatten\cpu.\genblk1.pcpi_mul.$mul$./benchmark/picorv32.v:2366$857.Y[0].Y[60]")
 

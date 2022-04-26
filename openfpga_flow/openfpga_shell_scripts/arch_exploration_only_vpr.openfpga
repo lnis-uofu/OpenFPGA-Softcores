@@ -3,7 +3,24 @@ vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
     --device ${VPR_DEVICE_LAYOUT} \
     --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} \
     --constant_net_method route \
+    --timing_report_npaths -1 \
     --save_graphics on
+
+# VPR options:
+# '--constant_net_method global'
+#     global: Treat constant nets as globals (not routed)
+#     route: Treat constant nets as normal nets (routed)
+# '--clock_modeling ideal'
+#     ideal: Treat clock pins as ideal (i.e. no routing delays on clocks)
+#     route: Treat clock nets as normal nets (i.e. routed using inter-block routing)
+#     dedicated_network: Use the architectures dedicated clock network (experimental)
+# '--timing_tradeoff 0.5'
+#     Controls the trade-off between bounding box minimization and delay 
+#     minimization in the placer. A value of 0 makes the placer focus 
+#     completely on bounding box (wirelength) minimization, while a value of 1 
+#     makes the placer focus completely on timing optimization.
+# '--timing_report_detail detailed'
+#     Controls the level of detail included in generated timing reports.
 
 # Finish and exit OpenFPGA
 exit

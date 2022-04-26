@@ -52,7 +52,7 @@ class VprReportTimingParser(object):
     _rIncr          = r'(?P<t_incr>[\d\.\-]+)'
     _rSum           = r'(?P<t_sum>[\d\.\-]+)'
     _rNet           = r'\|\s+\((?P<net>.+)\)'
-    _rArrivalTime   = r'data arrival time\s+(?P<arrival_time>[\d\.\-]+)'
+    _rArrivalTime   = r'data arrival time\s+(?P<arrival_time>[\d\.]+)'
     _rRequiredTime  = r'data required time\s+(?P<required_time>[\d\.\-]+)'
     _rSlackTime     = r'slack\s+\((?P<constraint>\w+)\)\s+(?P<slack_time>[\d\.\-]+)'
 
@@ -113,7 +113,7 @@ class VprReportTimingParser(object):
     def __init__(self, filename, nb_paths=None):
         self.filename   = filename
         self.nb_paths   = nb_paths      # save time by reading the first paths
-        self.fileinfo   = OrderedDict() # store all file information
+        self.fileinfo   = dict()        # store all file information
         self.paths      = list()        # list all paths of the files
         self.groups     = OrderedDict() # list all group of paths
         self.stats      = OrderedDict() # store statistics of paths
@@ -151,13 +151,13 @@ class VprReportTimingParser(object):
                 for regex, attrib, fmt in self._file_info:
                     m = regex.match(line)
                     if m:
-                        self.fileinfo.update(m.groupdict())
+                        self.fileinfo[attrib] = fmt(m.groupdict()[attrib])
                 if "unit_precision" in self.fileinfo:
                     precision = self.fileinfo['unit_precision']
                 # path description
                 for regex, attrib, fmt in self._path_desc:
                     m = regex.match(line)
-                    if m:
+                    if m and getattr(path, attrib) is None:
                         setattr(path, attrib, fmt(m.groupdict()[attrib]))
                 # end of path / loop breaker
                 if self._rcSlackTime.match(line):

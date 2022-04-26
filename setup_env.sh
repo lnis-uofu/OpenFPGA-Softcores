@@ -32,8 +32,12 @@ report-yosys-vpr () {
     ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_yosys_vpr.py "$@"
 }
 
-report-place-analyzer () {
-    ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_place_analyzer.py "$@"
+report-place-timing () {
+    ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_place_timing.py "$@"
+}
+
+report-route-grouping () {
+    ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_route_grouping.py "$@"
 }
 
 _run_softcore_completions () {
