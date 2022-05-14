@@ -36,21 +36,17 @@ report-place-timing () {
     ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_place_timing.py "$@"
 }
 
-report-route-grouping () {
-    ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_route_grouping.py "$@"
+report-route-paths () {
+    ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_route_paths.py "$@"
 }
 
 _run_softcore_completions () {
     local cur prev opts
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-h --help -d --debug --run-dir --device-layout --channel-width --cache-size --isa --run-list"
+    opts="-h --help -d --debug --device-layout --channel-width --cache-size --isa --run-list --run-dir"
     # optional arguments
     case ${prev} in
-        --run-dir)
-            COMPREPLY=( $(compgen -o nospace -o dirnames -d -- "${cur}") )
-            return 0
-            ;;
         --device-layout|--channel-width)
             opts="auto"
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -68,6 +64,10 @@ _run_softcore_completions () {
         --run-list)
             opts=$(find ${PROJECT_TESTS_PATH}/*.csv|sed -e "s|${PROJECT_PATH}/||")
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        --run-dir)
+            COMPREPLY=( $(compgen -o nospace -o dirnames -d -- "${cur}") )
             return 0
             ;;
     esac
