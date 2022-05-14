@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-Report route and groups: extends the description of each point composing the
-path (PB type, block ID, coordinates, ...) using VPR *.net and *.place reports
-and add metrics to provide a more complete routing analysis.
+Report path after route step: extends the description of each point composing
+the path (PB type, block ID, coordinates, ...) using Yosys *.eblif file, and
+VPR *.net and *.place reports and add metrics to provide a more complete
+routing analysis.
 """
 
 import os
@@ -22,7 +23,8 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.join(__file__, ".."))))
 from parsers.vpr_report_timing_parser import VprReportTimingParser
 from parsers.vpr_net_parser import VprNetParser
 from parsers.vpr_place_parser import VprPlaceParser
-from tools.path_builder import PathBuilder
+from parsers.blif_parser import BlifParser
+from tools.path_builder import PathBuilder, PBLocator
 
 # ============================================================================
 #  Command-line arguments
@@ -83,42 +85,31 @@ def find_filename(path, filename):
         sys.exit(1)
     return file[0]
 
-## Create group of path according to the startpoint
-def create_groups(timing, net, place, precision=3):
-    headers = ['id','start','end','start_pb','end_pb','nb_points','nb_pbs',
-               'arrival_time','path_time','net_time','pb_time','start_coords',
-               'end_coords','manhattan_dist','pb2pb_dist','ratio_dist']
-    groups  = OrderedDict()
-    total   = len(timing)
+## Create a list of paths with extended information
+def create_paths(timing, blif, pbloc, precision=3):
+    headers = [
+        # report_timing
+        'id','start_point','end_point',
+        # Yosys (*.eblif)
+        'start_inst','end_inst',
+        # Packer (*.net)
+        'start_pb','end_pb', 'subckts',
+        # Placer (*.place)
+        'start_coords','end_coords','nb_points','nb_pbs',
+        'manhattan_dist','pb2pb_dist',
+        # Router (report_timing)
+        'slack_time','arrival_time','path_time','net_time','pb_time',
+    ]
+    table = []
+    total = len(timing)
+    # for each path in the timing report
     for idx, path in enumerate(timing):
-        perc = 100 * idx / float(total)
-        print(f"[+] Path analyzed: {idx}/{total} ({perc:.2f}%)   ", end='\r', flush=True)
-        path = PathBuilder(path, net, place)
-        row  = {
-            'id'            : path.id,
-            'start'         : path[0]['inst'],
-            'end'           : path[-1]['inst'],
-            'start_pb'      : path.start_pb,
-            'end_pb'        : path.end_pb,
-            'nb_points'     : path.nb_points,
-            'nb_pbs'        : path.nb_pbs,
-            'arrival_time'  : f"{path.arrival_time:.{precision}f}",
-            'path_time'     : f"{path.path_time:.{precision}f}",
-            'net_time'      : f"{path.net_time:.{precision}f}",
-            'pb_time'       : f"{path.pb_time:.{precision}f}",
-            'start_coords'  : path[0]['coords'],
-            'end_coords'    : path[-1]['coords'],
-            'manhattan_dist': path.manhattan_dist,
-            'pb2pb_dist'    : path.pb2pb_dist,
-            'ratio_dist'    : f"{path.ratio_dist:.{precision}f}",
-        }
-        # group by startpoint
-        if row['start'] in groups:
-            groups[row['start']].append(row)
-        else:
-            groups[row['start']] = [row]
+        perc = 100 * (idx+1) / float(total)
+        print(f"[+] Path analyzed: {idx+1}/{total} ({perc:.2f}%)   ", end='\r', flush=True)
+        path = PathBuilder(path, blif, pbloc, precision)
+        table.append({h:path.__dict__[h] for h in headers})
     print()
-    return headers, groups
+    return headers, table
 
 ## Print a given path
 def print_path(headers, path):
@@ -141,22 +132,27 @@ def main():
     # glob search
     searchdir = os.path.join(args.search_path, "**")
     timing    = find_filename(searchdir, f"{prepack}report_timing.{setuphold}.rpt")
+    eblif     = find_filename(searchdir, "*.eblif")
+    blif      = find_filename(searchdir, "*.blif")
     net       = find_filename(searchdir, "*.net")
     place     = find_filename(searchdir, "*.place")
 
     # parsers
-    print(f"[+] Parse report files.")
+    print(f"[+] Parse report files in '{searchdir}'.")
+    t_start = time()
     timing    = VprReportTimingParser(timing)
+    blif      = BlifParser(eblif if eblif else blif)
     net       = VprNetParser(net)
     place     = VprPlaceParser(place)
+    pbloc     = PBLocator(net, place)
+    print(f"[+] Total parsing time: {time()-t_start:.2f} s")
 
     # save all paths in a report file
     if args.output:
-        # create group of paths
-        print(f"[+] Create group of paths.")
+        # extend the description for all paths of the timing report
         t_start = time()
-        headers, groups = create_groups(timing, net, place)
-        print(f"[+] Total elapsed time: {time()-t_start:.2f} s")
+        headers, table = create_paths(timing, blif, pbloc)
+        print(f"[+] Total analysis time: {time()-t_start:.2f} s")
         # create the output directory if it's not existing
         dirname = os.path.abspath(os.path.dirname(args.output))
         if not os.path.isdir(dirname):
@@ -165,14 +161,13 @@ def main():
         with open(args.output, 'w') as fp:
             wr = csv.DictWriter(fp, fieldnames=headers)
             wr.writeheader()
-            for start, paths in groups.items():
-                for path in paths:
-                    wr.writerow(path)
-        print(f"[+] Output report generated: '{args.output}'")
+            wr.writerows(table)
+        print(f"[+] Output CSV generated: '{args.output}'")
+    # print a single path
     else:
         path = timing[args.path_id-1 if args.path_id > 1 else 0]
-        headers, groups = create_groups([path], net, place)
-        print_path(headers, list(groups.items())[0][1][0])
+        headers, table = create_paths([path], blif, pbloc)
+        print_path(headers, table[0])
 
 
 if __name__ == "__main__":

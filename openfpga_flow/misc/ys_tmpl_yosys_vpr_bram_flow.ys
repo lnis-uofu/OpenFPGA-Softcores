@@ -91,3 +91,4 @@ stat
 #########################
 opt_clean -purge
 write_blif ${OUTPUT_BLIF}
+write_blif -cname -attr -iattr -conn -impltf ${OUTPUT_BLIF}.eblif
