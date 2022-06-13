@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os, re
-import functools
 try:
     # Try for the fast c-based version first
     import xml.etree.cElementTree as ET
@@ -93,7 +92,6 @@ class VprNetParser(object):
                     return parent, block_obj, port_obj, pin_obj
         return None
 
-    @functools.cache
     def find_block(self, point_name):
         """
         Return a block structure with the corresponding block info else None.
