@@ -1,0 +1,5 @@
+Sphinx>=3.0
+sphinx-rtd-theme
+sphinx-autodoc-typehints
+sphinxcontrib-svg2pdfconverter
+

@@ -10,7 +10,7 @@ The main objectives are to provide:
 3. Better domain-specific FPGA architectures tuned according to the design and application requirements.
 
 <p align="center">
-    <img src="./docs/figures/OpenFPGA-Softcores-Platform.svg">
+    <img src="./docs/images/openfpga-softcores-platform.svg">
 </p>
 
 ## Getting Started

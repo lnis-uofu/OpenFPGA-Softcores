@@ -1,14 +1,45 @@
 #!/usr/bin/env python3
 
+"""
+This Python library parses a *Berkeley Logic Interchange Format* (BLIF) and
+*Extended BLIF* (EBLIF) files, and generate a Python object for convenient
+use. A BLIF file can contain many models and references to models described in
+other BLIF files. A model is a flattened hierarchical circuit.
+For a detailed description of the BLIF file format, see the
+`BLIF documentation <https://www.cs.uic.edu/~jlillis/courses/cs594/spring05/blif.pdf>`_.
+
+In this library, the ``BlifParser`` object is a list of ``BlifModel`` objects.
+
+Examples:
+    >>> parser = BlifParser("<blif_filename>")
+    >>> model = parser[0]           # get the first model in the file
+    >>> model.get_instance("a[0]")  # get the instance name of the point "a[0]"
+    >>> model.get_pin("a[0]")       # get the pin name of the point "a[0]"
+    >>> model.subckts               # list() type
+    >>> model.names                 # dict() type
+    >>> model.latches               # dict() type
+"""
+
 import os, re, time
 import numpy as np
 from collections import OrderedDict
 
 class BlifModel(object):
+    """Object to store model properties of a design and its hierarchical
+    elements. For a given point, it returns the equivalent pin name and the
+    instance name used in the Verilog netlist when it is a ``.subckt`` element.
+
+    **Attributes**
+
+    - **name**    (*str*)  -- Name of the BLIF model.
+    - **inputs**  (*list*) -- All input signals used by the model.
+    - **outputs** (*list*) -- All output signals used by the model.
+    - **names**   (*dict*) -- All *logic-gate* (LUT) elements describe in the model.
+    - **latches** (*dict*) -- All *generic-latch* elements describe in the model.
+    - **subckts** (*list*) -- All *model-reference* elements describe in the model.
+    - **conns**   (*dict*) -- All *direct-connection* elements describe in the model.
     """
-    Define the model object to store all properties of each design and get
-    additional information from the Verilog (BLIF) netlist.
-    """
+
     def __init__(self, name, **kwargs):
         self.name       = name
         self.inputs     = kwargs.get('inputs', [])
@@ -23,16 +54,16 @@ class BlifModel(object):
         point = point_name.split('.')
         return '.'.join(point[:-1]), point[-1]
 
-    def _get_subckt_pin(self, subckt, pin_name):
-        """Return the subckt pin in the 'params' dictionary."""
+    def _get_pin_subckt(self, subckt, pin_name):
+        """Get the subckt pin in the `params` dictionary."""
         for signal, pins in subckt['params'].items():
             for pin in pins:
                 if pin == pin_name:
                     return signal
         return None
 
-    def get_names_pin(self, point_name):
-        """Return the signal name for a point of a .names block."""
+    def get_pin_names(self, point_name):
+        """Get the signal name for a point of a ``.names`` element."""
         output, pin_name = self._split_point(point_name)
         if output in self.names:
             pins = self.names[output]['pins']
@@ -40,66 +71,89 @@ class BlifModel(object):
                 return pins[pin_name]
         return None
 
-    def get_latch_pin(self, point_name):
-        """Return the signal name for a point of a .latch block."""
+    def get_pin_latch(self, point_name):
+        """Get the signal name for a point of a ``.latch`` element."""
         output, pin_name = self._split_point(point_name)
         if output in self.latches:
             if pin_name in self.latches[output]:
                 return self.latches[output][pin_name]
         return None
 
-    def get_subckt_pin(self, point_name):
-        """Return the signal name for a point of a .subckt block."""
+    def get_pin_subckt(self, point_name):
+        """Get the signal name for a point of a ``.subckt`` element."""
         output, pin_name = self._split_point(point_name)
         for subckt in self.subckts:
             if output in subckt['params']:
-                return self._get_subckt_pin(subckt, pin_name)
+                return self._get_pin_subckt(subckt, pin_name)
         return None
 
-    def get_pin(self, point_name, point_type=None):
-        """
-        Return the right pin name for a given point in the path.
+    def get_pin(self, point_name, element_type=None):
+        """Get the pin name of an element.
 
-        - output_name: name of the unique output signal
-        - pin_name: name of the pin (in/out) of the block
-            - `names`: {'in[#]', 'out[#]'}
-            - `latch`: {'D[0]', 'Q[0]'}
-            - `subckt`: [data_out[#], data_in[#], ...]
+        The point name is composed of the unique output name and the pin input
+        or output of the element.
+        Examples of pin name format according to the element type:
+
+        - ``.names``: `in[#]`, `out[#]`
+        - ``.latch``: `D[0]`, `Q[0]`
+        - ``.subckt``: `data_out[#]`, `data_in[#]`, ...
+
+        Args:
+            point_name (str): Point name of element to be found.
+            element_type (str, optional): Specific element type to search for
+                (`names`, `latch` or `subckt`).
         """
-        if point_type:
-            func = getattr(self, f"get_{point_type}_pin")
+        if element_type in ['names', 'latch', 'subckt']:
+            func = getattr(self, f"get_pin_{element_type}")
             return func(point_name)
-        for point_type in ['names', 'latch', 'subckt']:
-            func = getattr(self, f"get_{point_type}_pin")
+        for element_type in ['names', 'latch', 'subckt']:
+            func = getattr(self, f"get_pin_{element_type}")
             pin_name = func(point_name)
             if pin_name:
                 return pin_name
         return None
 
     def get_instance(self, point_name):
-        """Return the instance hierarchy naming of a subckt."""
+        """Get the Verilog instance name of a ``.subckt`` element.
+
+        .. note::
+            Works only when the ``--cname`` option is enabled when Yosys
+            generates its output BLIF file with the ``write_blif``
+            command.
+
+        Args:
+            point_name (str): Point name of the subckt element to be found.
+        """
         for subckt in self.subckts:
             if not 'inst' in subckt:
                 continue
             output, pin_name = self._split_point(point_name)
             if output in subckt['params']:
-                if self._get_subckt_pin(subckt, pin_name):
+                if self._get_pin_subckt(subckt, pin_name):
                     return subckt['inst']
         return None
 
 
 class BlifParser(object):
     """
-    Parse a BLIF or EBLIF file (generated by Yosys) to create a list of model
-    objects (class BlifModel) which describe in the full design.
+    Parse a BLIF/EBLIF file (generated by Yosys) using pre-defined regex
+    keywords to create a list of ``BlifModel`` objects, which describe the
+    full design. If there is only one model in the BLIF file, then the index
+    zero will be used to access it.
 
-    Not supported BLIF primitives:
-    - .exdc, .mlatch, .latch_order
-    - Clock constraints: .cycle, .clock, .clock_event, .area, .delay, ...
-    - FSM: .start_kiss, .end_kiss, .i, .o, .p, .s, .r
+    BLIF primitives supported:
+    ``.model``, ``.inputs``, ``.outputs``, ``.names``, ``.latch``,
+    ``.subckt``, ``.cname``, ``.attr``, ``.conn``
 
-    Documentations:
-    - BLFI format: https://www.cs.uic.edu/~jlillis/courses/cs594/spring05/blif.pdf
+    BLIF primitives not supported:
+    ``.cycle``, ``.clock``, ``.clock_event``, ``.area``, ``.delay``,
+    ``.start_kiss``, ``.end_kiss``, ``.i``, ``.o``, ``.p``, ``.s``,
+    ``.exdc``, ``.mlatch``, ``.latch_order``, ...
+
+    **Attributes**
+
+    - **filename** (*str*)  -- File name of the BLIF/EBLIF file.
+    - **models**   (*list*) -- Models described in the BLIF/EBLIF file.
     """
 
     # Regex to extract BLIF netlist
@@ -171,7 +225,7 @@ class BlifParser(object):
         return self.models[idx]
 
     def parse(self):
-        """Parse the report file using the class regex."""
+        """Parse the BLIF file using the class regex."""
         # Parse the file
         with open(self.filename, 'r') as fp:
             model = None
@@ -251,16 +305,26 @@ class BlifParser(object):
                     m = m.groupdict()
                     block['inst'] = m['name']
 
-    def get_pin(self, point_name, point_type=None):
-        """Return the pin name for a given point across all models."""
+    def get_pin(self, point_name, element_type=None):
+        """Get the BLIF pin name of a point across all models.
+
+        Args:
+            point_name (str): Name of the point to search accross all models.
+            element_type (str, optional): Specify the type of the element
+                (default is `None`).
+        """
         for m in self.models:
-            pin = m.get_pin(point_name, point_type)
+            pin = m.get_pin(point_name, element_type)
             if pin is not None:
                 return pin
         return None
 
     def get_instance(self, point_name):
-        """Return the instance name of a given point across all models."""
+        """Get the Verilog instance name of a point across all *subckt*.
+
+        Args:
+            point_name (str): Name of the point to search accross all models.
+        """
         for m in self.models:
             inst = m.get_instance(point_name)
             if inst is not None:
