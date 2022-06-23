@@ -1,7 +1,7 @@
 Parsers API
 ===========
 
-The Parsers API is chapter describes all public classes and methopds to parse OpenFPGA, Yosys and VPR generated files, as presented in :numref:`fig_flow_files`.
+This section describes the `Parsers API` providing public classes and methods to parse OpenFPGA, Yosys and VPR generated output files, as presented in :numref:`fig_flow_files`.
 
 .. figure:: ../images/openfpga-softcores-io-files.svg
    :width: 80%

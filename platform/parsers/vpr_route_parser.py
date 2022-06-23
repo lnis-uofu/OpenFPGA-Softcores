@@ -6,10 +6,9 @@ In this library, the ``VprRouteParser`` object contains private look-up-table
 of ``Net`` objects accesible by *net name* or *net identifier* keys. Each
 ``Net`` could be iterate as a list to go through all nodes composing the path.
 
-Examples:
-    >>> rpt = VprRouteParser("<route-filename>")
-    >>> rpt.get_net(100)          # return a Net object, a list of nodes
-    >>> rpt.get_global_net("clk") # return a list of block using the global 'clk' net
+>>> rpt = VprRouteParser("<route-filename>")
+>>> rpt.get_net(100)          # return a Net object, a list of nodes
+>>> rpt.get_global_net("clk") # return a list of block using the global 'clk' net
 """
 
 import os, re
@@ -18,10 +17,9 @@ class Net(list):
     """Object to store net properties and to manipulate each node as a Python
     list object.
 
-    **Attributes**
-
-    - **id**   (*int*) -- Unique identifier of the net.
-    - **name** (*str*) -- Name of the net, more or less related to the output point name.
+    Attributes:
+        id   (int): Unique identifier of the net.
+        name (str): Name of the net, more or less related to the output point name.
     """
     def __init__(self, *args, **kwargs):
         # inherit from a list type
@@ -88,11 +86,13 @@ class VprRouteParser(object):
     - *SINK*   : sink of a certain input class,
     - *SOURCE* : source of a certain output pin class.
 
-    **Attributes**
-
-    - **filename** (*str*) -- VPR ``.route`` file name to parse.
-    - **place_file** (*str*) -- VPR ``.place`` file name used before routing.
-    - **array_size** (*tuple* of *int*) -- Size of the FPGA device layout.
+    Attributes:
+        filename   (str)  : VPR ``.route`` file name to parse.
+        place_file (str)  : VPR ``.place`` file name used before routing.
+        array_size (tuple): Size of the FPGA device layout.
+    
+    Args:
+        filename   (str)  : VPR ``.route`` file name to parse.
     """
 
     # Define regex to parse file information

@@ -22,15 +22,14 @@ class Path(list):
     Define the ``Path`` object to store path properties and manipulate each
     point composing the path like a Python list object.
 
-    **Attributes**
-
-    - **id**            (*int*)   -- Unique path identifier.
-    - **startpoint**    (*str*)   -- First point of the path.
-    - **endpoint**      (*str*)   -- Last point of the path.
-    - **type**          (*str*)   -- Path type (`setup` or `hold`).
-    - **arrival_time**  (*float*) -- Total arrival delay time.
-    - **required_time** (*float*) -- Total required delay time.
-    - **slack_time**    (*float*) -- Total slack time of the path.
+    Attributes:
+        id            (int)  : Unique path identifier.
+        startpoint    (str)  : First point of the path.
+        endpoint      (str)  : Last point of the path.
+        type**        (str)  : Path type (`setup` or `hold`).
+        arrival_time  (float): Total arrival delay time.
+        required_time (float): Total required delay time.
+        slack_time    (float): Total slack time of the path.
     """
     def __init__(self, *args, **kwargs):
         # inherit from a list type
@@ -58,14 +57,17 @@ class VprReportTimingParser(object):
         All paths in the design are listed thanks to the VPR command option:
         ``--timing_report_npaths -1``.
 
-    **Attributes**
-
-    - **filename** (*str*)  -- VPR report timing file name to parse.
-    - **nb_paths** (*int*)  -- Save parsing time by reading the first paths.
-    - **fileinfo** (*dict*) -- File description and information.
-    - **paths**    (*list*) -- All ``Path`` listed in the report timing file.
-    - **groups**   (*dict*) -- All group of ``Path`` having the same start point.
-    - **stats**    (*dict*) -- Statistics of the paths.
+    Attributes:
+        filename (str) : VPR report timing file name to parse.
+        nb_paths (int) : Save parsing time by reading the first paths.
+        fileinfo (dict): File description and information.
+        paths    (list): All ``Path`` listed in the report timing file.
+        groups   (dict): All group of ``Path`` having the same start point.
+        stats    (dict): Statistics of the paths.
+    
+    Args:
+        filename (str) : VPR report timing file name to parse.
+        nb_paths (int, optional): Save parsing time by reading the first paths.
     """
 
     # Regex to extract file information

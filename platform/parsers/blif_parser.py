@@ -10,14 +10,13 @@ For a detailed description of the BLIF file format, see the
 
 In this library, the ``BlifParser`` object is a list of ``BlifModel`` objects.
 
-Examples:
-    >>> parser = BlifParser("<blif_filename>")
-    >>> model = parser[0]           # get the first model in the file
-    >>> model.get_instance("a[0]")  # get the instance name of the point "a[0]"
-    >>> model.get_pin("a[0]")       # get the pin name of the point "a[0]"
-    >>> model.subckts               # list() type
-    >>> model.names                 # dict() type
-    >>> model.latches               # dict() type
+>>> parser = BlifParser("<blif_filename>")
+>>> model = parser[0]           # get the first model in the file
+>>> model.get_instance("a[0]")  # get the instance name of the point "a[0]"
+>>> model.get_pin("a[0]")       # get the pin name of the point "a[0]"
+>>> model.subckts               # list() type
+>>> model.names                 # dict() type
+>>> model.latches               # dict() type
 """
 
 import os, re, time
@@ -26,18 +25,23 @@ from collections import OrderedDict
 
 class BlifModel(object):
     """Object to store model properties of a design and its hierarchical
-    elements. For a given point, it returns the equivalent pin name and the
-    instance name used in the Verilog netlist when it is a ``.subckt`` element.
+    elements. For a given point, it returns the equivalent pin name of an
+    element, and the Verilog netlist instance name when the element type is a
+    ``.subckt``.
 
-    **Attributes**
+    Attributes:
+        name    (str) : Name of the BLIF model.
+        inputs  (list): All input signals used by the model.
+        outputs (list): All output signals used by the model.
+        names   (dict): All *logic-gate* (LUT) elements describe in the model.
+        latches (dict): All *generic-latch* elements describe in the model.
+        subckts (list): All *model-reference* elements describe in the model.
+        conns   (dict): All *direct-connection* elements describe in the model.
 
-    - **name**    (*str*)  -- Name of the BLIF model.
-    - **inputs**  (*list*) -- All input signals used by the model.
-    - **outputs** (*list*) -- All output signals used by the model.
-    - **names**   (*dict*) -- All *logic-gate* (LUT) elements describe in the model.
-    - **latches** (*dict*) -- All *generic-latch* elements describe in the model.
-    - **subckts** (*list*) -- All *model-reference* elements describe in the model.
-    - **conns**   (*dict*) -- All *direct-connection* elements describe in the model.
+    Args:
+        name    (str): Name of the BLIF model.
+        inputs  (list, optional): All input signals used by the model.
+        outputs (list, optional): All output signals used by the model.
     """
 
     def __init__(self, name, **kwargs):
@@ -99,7 +103,7 @@ class BlifModel(object):
         - ``.subckt``: `data_out[#]`, `data_in[#]`, ...
 
         Args:
-            point_name (str): Point name of element to be found.
+            point_name   (str): Point name of element to be found.
             element_type (str, optional): Specific element type to search for
                 (`names`, `latch` or `subckt`).
         """
@@ -116,7 +120,7 @@ class BlifModel(object):
     def get_instance(self, point_name):
         """Get the Verilog instance name of a ``.subckt`` element.
 
-        .. note::
+        Note:
             Works only when the ``--cname`` option is enabled when Yosys
             generates its output BLIF file with the ``write_blif``
             command.
@@ -150,10 +154,12 @@ class BlifParser(object):
     ``.start_kiss``, ``.end_kiss``, ``.i``, ``.o``, ``.p``, ``.s``,
     ``.exdc``, ``.mlatch``, ``.latch_order``, ...
 
-    **Attributes**
+    Attributes:
+        filename (str) : File name of the BLIF/EBLIF file.
+        models   (list): Models described in the BLIF/EBLIF file.
 
-    - **filename** (*str*)  -- File name of the BLIF/EBLIF file.
-    - **models**   (*list*) -- Models described in the BLIF/EBLIF file.
+    Args:
+        filename (str) : File name of the BLIF/EBLIF file.
     """
 
     # Regex to extract BLIF netlist
@@ -309,7 +315,7 @@ class BlifParser(object):
         """Get the BLIF pin name of a point across all models.
 
         Args:
-            point_name (str): Name of the point to search accross all models.
+            point_name   (str): Name of the point to search accross all models.
             element_type (str, optional): Specify the type of the element
                 (default is `None`).
         """
