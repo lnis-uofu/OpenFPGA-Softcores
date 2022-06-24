@@ -7,8 +7,8 @@ of ``Net`` objects accesible by *net name* or *net identifier* keys. Each
 ``Net`` could be iterate as a list to go through all nodes composing the path.
 
 >>> rpt = VprRouteParser("<route-filename>")
->>> rpt.get_net(100)          # return a Net object, a list of nodes
->>> rpt.get_global_net("clk") # return a list of block using the global 'clk' net
+>>> rpt.get_net(100)            # Net object, a list of nodes
+>>> rpt.get_global_net("clk")   # list of block using the global 'clk' net
 """
 
 import os, re
@@ -19,7 +19,12 @@ class Net(list):
 
     Attributes:
         id   (int): Unique identifier of the net.
-        name (str): Name of the net, more or less related to the output point name.
+        name (str): Name of the net, more or less related to the output point
+            name.
+
+    Args:
+        *args     : Variable length argument list.
+        **kwargs  : Arbitrary keyword arguments.
     """
     def __init__(self, *args, **kwargs):
         # inherit from a list type
@@ -34,6 +39,11 @@ class Net(list):
         Args:
             start (tuple): Start node coordinates, usually *OPIN* type.
             end (tuple): End node coordinates, usually *IPIN* type.
+
+        Returns:
+            :obj:`list`, :obj:`list`, :obj:`str`, :obj:`str`: node ID,
+            path (list of :obj:`tuple` (node x, node y)), output pin name,
+            and input pin name, :obj:`None` otherwise.
         """
         assert isinstance(start, tuple), "Wrong 'start' tuple"
         assert isinstance(end, tuple), "Wrong 'end' tuple"
@@ -90,7 +100,7 @@ class VprRouteParser(object):
         filename   (str)  : VPR ``.route`` file name to parse.
         place_file (str)  : VPR ``.place`` file name used before routing.
         array_size (tuple): Size of the FPGA device layout.
-    
+
     Args:
         filename   (str)  : VPR ``.route`` file name to parse.
     """
@@ -207,7 +217,7 @@ class VprRouteParser(object):
         self._gnet_ids  = {} # get the corresponding global net ID
         self._nets      = {} # store all nets by ID
         self._gnets     = {} # store all global nets by ID
-        self.parse()
+        self._parse()
 
     def _format_group(self, groupdict):
         """Format all value in the regex groupdict using the defined rules."""
@@ -232,7 +242,7 @@ class VprRouteParser(object):
                 return nets[net_ids[net_id_or_name]]
         return None
 
-    def parse(self):
+    def _parse(self):
         """Parse the route file using the regex class."""
         with open(self.filename, 'r') as fp:
             net, gnet = None, None
@@ -309,6 +319,9 @@ class VprRouteParser(object):
         Args:
             net_id_or_name (int, str): Net identifier (integer) or point name
                 (string) of the net to be found.
+
+        Returns:
+            ``Net``: list of nodes, :obj:`None`: otherwise.
         """
         return self._get_net(net_id_or_name, self._nets, self._net_ids)
 
@@ -318,6 +331,10 @@ class VprRouteParser(object):
         Args:
             net_id_or_name (int, str): Net identifier (integer) or point name
                 (string) of the net to be found.
+
+        Returns:
+            ``Net``: list of block where the net is connected to,
+            :obj:`None` otherwise.
         """
         return self._get_net(net_id_or_name, self._gnets, self._gnet_ids)
 

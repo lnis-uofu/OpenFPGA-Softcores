@@ -24,7 +24,7 @@ from parsers.vpr_report_timing_parser import VprReportTimingParser
 from parsers.vpr_net_parser import VprNetParser
 from parsers.vpr_place_parser import VprPlaceParser
 from parsers.blif_parser import BlifParser
-from tools.path_builder import PathBuilder, PBLocator
+from tools.path_builder import PathBuilder
 
 # ============================================================================
 #  Command-line arguments
@@ -86,7 +86,7 @@ def find_filename(path, filename):
     return file[0]
 
 ## Create a list of paths with extended information
-def create_paths(timing, blif, pbloc, precision=3):
+def create_paths(timing, net, place, blif, precision=3):
     headers = [
         # report_timing
         'id','start_point','end_point',
@@ -106,7 +106,7 @@ def create_paths(timing, blif, pbloc, precision=3):
     for idx, path in enumerate(timing):
         perc = 100 * (idx+1) / float(total)
         print(f"[+] Path analyzed: {idx+1}/{total} ({perc:.2f}%)   ", end='\r', flush=True)
-        path = PathBuilder(path, blif, pbloc, precision)
+        path = PathBuilder(path, net, place, blif, precision)
         table.append({h:path.__dict__[h] for h in headers})
     print()
     return headers, table
@@ -144,14 +144,13 @@ def main():
     blif      = BlifParser(eblif if eblif else blif)
     net       = VprNetParser(net)
     place     = VprPlaceParser(place)
-    pbloc     = PBLocator(net, place)
     print(f"[+] Total parsing time: {time()-t_start:.2f} s")
 
     # save all paths in a report file
     if args.output:
         # extend the description for all paths of the timing report
         t_start = time()
-        headers, table = create_paths(timing, blif, pbloc)
+        headers, table = create_paths(timing, net, place, blif)
         print(f"[+] Total analysis time: {time()-t_start:.2f} s")
         # create the output directory if it's not existing
         dirname = os.path.abspath(os.path.dirname(args.output))
@@ -166,7 +165,7 @@ def main():
     # print a single path
     else:
         path = timing[args.path_id-1 if args.path_id > 1 else 0]
-        headers, table = create_paths([path], blif, pbloc)
+        headers, table = create_paths([path], net, place, blif)
         print_path(headers, table[0])
 
 

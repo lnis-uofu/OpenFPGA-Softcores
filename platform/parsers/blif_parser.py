@@ -67,7 +67,14 @@ class BlifModel(object):
         return None
 
     def get_pin_names(self, point_name):
-        """Get the signal name for a point of a ``.names`` element."""
+        """Get the pin name for a point of a ``.names`` element.
+
+        Args:
+            point_name (str): Point name of element to be found.
+
+        Returns:
+            :obj:`str`: pin name found, :obj:`None`: otherwise.
+        """
         output, pin_name = self._split_point(point_name)
         if output in self.names:
             pins = self.names[output]['pins']
@@ -76,7 +83,14 @@ class BlifModel(object):
         return None
 
     def get_pin_latch(self, point_name):
-        """Get the signal name for a point of a ``.latch`` element."""
+        """Get the pin name for a point of a ``.latch`` element.
+
+        Args:
+            point_name (str): Point name of element to be found.
+
+        Returns:
+            :obj:`str`: pin name found, :obj:`None`: otherwise.
+        """
         output, pin_name = self._split_point(point_name)
         if output in self.latches:
             if pin_name in self.latches[output]:
@@ -84,7 +98,14 @@ class BlifModel(object):
         return None
 
     def get_pin_subckt(self, point_name):
-        """Get the signal name for a point of a ``.subckt`` element."""
+        """Get the pin name for a point of a ``.subckt`` element.
+
+        Args:
+            point_name (str): Point name of element to be found.
+
+        Returns:
+            :obj:`str`: pin name found, :obj::obj:`None`: otherwise.
+        """
         output, pin_name = self._split_point(point_name)
         for subckt in self.subckts:
             if output in subckt['params']:
@@ -92,7 +113,7 @@ class BlifModel(object):
         return None
 
     def get_pin(self, point_name, element_type=None):
-        """Get the pin name of an element.
+        """Get the pin name of any element type.
 
         The point name is composed of the unique output name and the pin input
         or output of the element.
@@ -106,6 +127,9 @@ class BlifModel(object):
             point_name   (str): Point name of element to be found.
             element_type (str, optional): Specific element type to search for
                 (`names`, `latch` or `subckt`).
+
+        Returns:
+            :obj:`str`: pin name found, :obj:`None`: otherwise.
         """
         if element_type in ['names', 'latch', 'subckt']:
             func = getattr(self, f"get_pin_{element_type}")
@@ -127,6 +151,9 @@ class BlifModel(object):
 
         Args:
             point_name (str): Point name of the subckt element to be found.
+
+        Returns:
+            :obj:`str`: instance name found, :obj:`None`: otherwise.
         """
         for subckt in self.subckts:
             if not 'inst' in subckt:
@@ -197,7 +224,7 @@ class BlifParser(object):
     def __init__(self, filename):
         self.filename   = filename
         self.models     = list()    # list of each model in the file
-        self.parse()
+        self._parse()
 
     def __str__(self):
         """For debbuging purpose: print(object)."""
@@ -230,7 +257,7 @@ class BlifParser(object):
             return None
         return self.models[idx]
 
-    def parse(self):
+    def _parse(self):
         """Parse the BLIF file using the class regex."""
         # Parse the file
         with open(self.filename, 'r') as fp:
@@ -312,12 +339,16 @@ class BlifParser(object):
                     block['inst'] = m['name']
 
     def get_pin(self, point_name, element_type=None):
-        """Get the BLIF pin name of a point across all models.
+        """Get the pin name of a point across all models.
 
         Args:
-            point_name   (str): Name of the point to search accross all models.
+            point_name   (str): Point name of the element to be found accross
+                all BLIF models in the BLIF file.
             element_type (str, optional): Specify the type of the element
-                (default is `None`).
+                (default is :obj:`None`:).
+
+        Returns:
+            :obj:`str`: pin name found, :obj:`None`: otherwise.
         """
         for m in self.models:
             pin = m.get_pin(point_name, element_type)
@@ -326,10 +357,14 @@ class BlifParser(object):
         return None
 
     def get_instance(self, point_name):
-        """Get the Verilog instance name of a point across all *subckt*.
+        """Get the Verilog instance name of a point across all `subckt`.
 
         Args:
-            point_name (str): Name of the point to search accross all models.
+            point_name (str): Point name of the subckt element to be found
+                accross all BLIF models in the BLIF file.
+
+        Returns:
+            :obj:`str`: instance name found, :obj:`None`: otherwise.
         """
         for m in self.models:
             inst = m.get_instance(point_name)

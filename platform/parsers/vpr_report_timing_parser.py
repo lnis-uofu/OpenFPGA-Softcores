@@ -53,7 +53,7 @@ class VprReportTimingParser(object):
     tree of each signal in order to perform the routing congestion of the
     design.
 
-    .. note::
+    Note:
         All paths in the design are listed thanks to the VPR command option:
         ``--timing_report_npaths -1``.
 
@@ -64,7 +64,7 @@ class VprReportTimingParser(object):
         paths    (list): All ``Path`` listed in the report timing file.
         groups   (dict): All group of ``Path`` having the same start point.
         stats    (dict): Statistics of the paths.
-    
+
     Args:
         filename (str) : VPR report timing file name to parse.
         nb_paths (int, optional): Save parsing time by reading the first paths.
@@ -152,9 +152,9 @@ class VprReportTimingParser(object):
         self.paths      = list()        # list all paths of the files
         self.groups     = OrderedDict() # list all group of paths
         self.stats      = OrderedDict() # store statistics of paths
-        self.parse()
-        self.get_groups()
-        self.get_stats()
+        self._parse()
+        self._create_groups()
+        self._create_stats()
 
     def __str__(self):
         """For debbuging purpose: print(object)."""
@@ -171,7 +171,7 @@ class VprReportTimingParser(object):
         """Use this class as a list, in order to iterate each path."""
         return self.paths[idx]
 
-    def parse(self, precision=3):
+    def _parse(self, precision=3):
         """Parse the report file using the class regex."""
         # Get file updated date and time
         self.fileinfo['modified_datetime'] = time.ctime(os.path.getmtime(self.filename))
@@ -249,7 +249,7 @@ class VprReportTimingParser(object):
             # update the total number of paths
             self.nb_paths = len(self.paths)
 
-    def get_groups(self):
+    def _create_groups(self):
         """Create groups of signal (bus) for high-level routing analysis."""
         for p in self.paths:
             if p.startpoint in self.groups:
@@ -262,7 +262,7 @@ class VprReportTimingParser(object):
                 'total'     : 1,
             }
 
-    def get_stats(self):
+    def _create_stats(self):
         """Calculate path statistics."""
         if not self.paths:
             return
@@ -275,7 +275,11 @@ class VprReportTimingParser(object):
         })
 
     def print_groups(self, debug=False):
-        """Just a debug function."""
+        """Print path grouped by `startpoint`, to debug.
+
+        Args:
+            debug (bool): Enable verbose mode.
+        """
         for start, count in self.groups.items():
             print(f"{count['total']:3} paths, {start} -> {count['end']}")
             if debug:

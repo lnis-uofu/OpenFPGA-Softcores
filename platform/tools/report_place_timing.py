@@ -18,7 +18,7 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.join(__file__, ".."))))
 from parsers.vpr_report_timing_parser import VprReportTimingParser
 from parsers.vpr_net_parser import VprNetParser
 from parsers.vpr_place_parser import VprPlaceParser
-from tools.path_builder import PathBuilder, PBLocator
+from tools.path_builder import PathBuilder
 
 # ============================================================================
 #  Command-line arguments
@@ -158,7 +158,6 @@ def main():
     timing    = VprReportTimingParser(timing)
     net       = VprNetParser(net)
     place     = VprPlaceParser(place)
-    pbloc     = PBLocator(net, place)
 
     # save all paths in a report file
     if args.output:
@@ -171,14 +170,14 @@ def main():
             for path in timing:
                 percentage = 100 * path.id / float(len(timing))
                 print(f"[+] Path analyzed: {path.id}/{len(timing)} ({percentage:.2f}%).", end='\r', flush=True)
-                path_ext = PathBuilder(path, None, pbloc)
+                path_ext = PathBuilder(path, net, place)
                 print_path(path_ext, stream=fp)
             print()
         print(f"[+] Output report generated: '{args.output}'")
     # single path printing (stdout)
     else:
         path = timing[args.path_id-1 if args.path_id > 1 else 0]
-        path = PathBuilder(path, None, pbloc)
+        path = PathBuilder(path, net, place)
         print_path(path)
 
 

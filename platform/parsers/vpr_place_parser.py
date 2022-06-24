@@ -6,8 +6,8 @@ In this library, the ``VprPlaceParser`` object provide a method to retrieve
 all physical block position on the FPGA grid.
 
 >>> rpt = VprPlaceParser("<place-filename>")
->>> rpt.get_coordinates("a[0]") # return the block coordinates containing the point 'a[0]'
->>> rpt.get_coordinates(10)     # return the block coordinates of the block ID #10
+>>> rpt.get_coordinates("a[0]")  # block coordinates containing the point 'a[0]'
+>>> rpt.get_coordinates(10)      # block coordinates of the block ID #10
 """
 
 import os, re
@@ -42,9 +42,9 @@ class VprPlaceParser(object):
         self.array_size   = (None, None)
         self._block_ids   = {} # save all block by block id
         self._block_names = {} # save all block by block names
-        self.parse()
+        self._parse()
 
-    def parse(self):
+    def _parse(self):
         """Parse the place file using the class regex."""
         with open(self.filename, 'r') as fp:
             for line in fp.readlines():
@@ -91,6 +91,10 @@ class VprPlaceParser(object):
         Args:
             block_id_or_name (int, str): block identifier (integer) or point
                 name (string) of the block position to be found.
+
+        Returns:
+            :obj:`tuple` (`x`, `y`, `sub`): block coordinates, :obj:`None`
+            otherwise.
         """
         # for the block id search
         if isinstance(block_id_or_name, int):
