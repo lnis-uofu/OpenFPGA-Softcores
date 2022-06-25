@@ -41,7 +41,8 @@ class VprNetParser(object):
     Attributes:
         filename (str) : XML file name to parse.
         debug    (bool): Enable the debugging mode.
-        root     (`Element`): object pointing on the XML root instance.
+        root     (:obj:`Element <xml.etree.ElementTree.Element>`): object
+                         pointing on the XML root instance.
         pbs      (list): List of `Element` refering to all Physical Blocks.
         lut      (dict): Look-up-table associating of every `point name` to
             its `Element` object for fast-searches.
@@ -99,7 +100,8 @@ class VprNetParser(object):
             point_name (str): Point name of the block to be found.
 
         Returns:
-            ``Element``: block object, :obj:`None` otherwise.
+            :obj:`Element <xml.etree.ElementTree.Element>`: block object,
+            :obj:`None` otherwise.
         """
         block_name = '.'.join(point_name.split('.')[:-1])
         return self.lut[block_name]
@@ -109,8 +111,9 @@ class VprNetParser(object):
 
         Args:
             point_name (str): Point name of the block to be found.
-            block (obj): ``Element`` object containing the point and pin.
-                Giving the block as parameter will save execution time.
+            block (:obj:`Element <xml.etree.ElementTree.Element>`): object
+                containing the point and pin. Giving the block as parameter
+                will save execution time.
 
         Returns:
             :obj:`tuple` (`name`, `direction`): pin description, :obj:`None` otherwise.

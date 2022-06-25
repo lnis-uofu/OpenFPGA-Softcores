@@ -12,4 +12,5 @@ class ProjectEnv:
     softcore_path       = abspath(join(platform_path, "softcores"))
     softcore_tmpl_path  = abspath(join(softcore_path, "templates"))
     third_party_path    = abspath(join(project_path, "third_party"))
+    softcore_3rd_path   = abspath(join(third_party_path, "softcores"))
 

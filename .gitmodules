@@ -1,6 +1,9 @@
 [submodule "third_party/picorv32"]
-	path = third_party/picorv32
+	path = third_party/softcores/picorv32
 	url = https://github.com/YosysHQ/picorv32.git
 [submodule "third_party/ibex"]
-	path = third_party/ibex
+	path = third_party/softcores/ibex
 	url = https://github.com/lowRISC/ibex.git
+[submodule "third_party/OpenFPGA"]
+	path = third_party/OpenFPGA
+	url = https://github.com/lnis-uofu/OpenFPGA

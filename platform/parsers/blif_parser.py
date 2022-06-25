@@ -343,9 +343,8 @@ class BlifParser(object):
 
         Args:
             point_name   (str): Point name of the element to be found accross
-                all BLIF models in the BLIF file.
-            element_type (str, optional): Specify the type of the element
-                (default is :obj:`None`:).
+                                all BLIF models in the BLIF file.
+            element_type (str, optional): Specify the type of the element.
 
         Returns:
             :obj:`str`: pin name found, :obj:`None`: otherwise.

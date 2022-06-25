@@ -8,7 +8,7 @@ This section describes the `Parsers API` providing public classes and methods to
    :align: center
    :name: fig_flow_files
    
-   Input and output generated files in the OpenFPGA project.
+   Output generated files by the *OpenFPGA* framework, parsed by the *OpenFPGA-Softcores* platform.
 
 Yosys Parsers
 -------------

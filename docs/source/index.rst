@@ -7,29 +7,26 @@ The proposed platform acts as a Python API, wrapping EDA tools, for fast and acc
 .. note::
    This project is under active development.
 
-Contents
---------
 
 .. toctree::
    :maxdepth: 2
    :caption: User Guide
-   :numbered:
+   :numbered: 2
    
-   installation
    quickstart
    tools
 
 .. toctree::
    :maxdepth: 2
    :caption: Reference Manual
-   :numbered:
+   :numbered: 2
 
    parsers_api
    softcores_api
    generators_api
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -23,4 +23,5 @@ docs/_build/
 /*.rpt
 build/
 outputs/
+pyvenv/
 run_dir/

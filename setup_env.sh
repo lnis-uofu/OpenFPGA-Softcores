@@ -11,13 +11,30 @@ if [ ! -d "${PWD}/.git" ] || [ ! -f "${PWD}/setup_env.sh" ]; then
     return 1
 fi
 
-# OpenFPGA environment
-if [ -z $OPENFPGA_PATH ]; then
-    echo "[ERROR] 'OPENFPGA_PATH' environment variable not found!"
-    echo "[INFO ] Source the 'openfpga.sh' first, before running soft-core simulations."
+# Virtual Python environment
+if [ -d "pyvenv" ]; then
+    source ${PWD}/pyvenv/bin/activate
 fi
 
-# Project enviroment
+# OpenFPGA framework environment
+if [ -d "third_party/OpenFPGA" ]; then
+    export OPENFPGA_PATH="${PWD}/third_party/OpenFPGA"
+fi
+
+if [ -z $OPENFPGA_PATH ]; then
+    echo "[ERROR] ***********************************************************************"
+    echo "[ERROR] *           'OPENFPGA_PATH' environment variable not found!           *"
+    echo "[ERROR] *                                                                     *"
+    echo "[ERROR] * Please update the 'OPENFPGA_PATH' environment variable with your    *"
+    echo "[ERROR] * installation location before running soft-core simulations or       *"
+    echo "[ERROR] * install the latest version with: 'third_party/install_openfpga.sh'. *"
+    echo "[ERROR] ***********************************************************************"
+    return 2
+fi
+
+source $OPENFPGA_PATH/openfpga.sh
+
+# Project environment
 export           PROJECT_PATH=$(pwd)
 export     PROJECT_TASKS_PATH="${PROJECT_PATH}/fpga_archs"
 export     PROJECT_TESTS_PATH="${PROJECT_PATH}/tests"

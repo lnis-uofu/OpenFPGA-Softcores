@@ -55,46 +55,46 @@ ap.add_argument(
     '-d', '--debug',
     action  = "store_true",
     default = False,
-    help    = "Enable debug mode",
-)
-ap.add_argument(
-    '--run-dir',
-    metavar = "<path>",
-    default = "run_dir",
-    help    = "Define the result directory to parse (default: %(default)s)",
+    help    = "Enable debug mode (default: %(default)s)",
 )
 # Architecture-related arguments
 ap.add_argument(
     '--device-layout',
-    metavar = "<WxH>",
+    metavar = "<WxH|auto>",
     default = "auto",
-    help    = "Define a fixed FPGA layout (default: %(default)s)",
+    help    = "Define a fixed FPGA layout dimensions (default: %(default)s)",
 )
 ap.add_argument(
     '--channel-width',
-    metavar = "<integer>",
+    metavar = "<int|auto>",
     default = "auto",
     help    = "Define a fixed FPGA channel width (default: %(default)s)",
 )
 # Softcore-related arguments
 ap.add_argument(
     "--cache-size",
-    metavar = "<integer>",
+    metavar = "<int>",
     type    = int,
     default = 1024,
-    help    = "Define the memory size of the softcore (default: %(default)s)",
+    help    = "Define the memory size (L1) of the core in bytes (default: %(default)s)",
 )
 ap.add_argument(
     "--isa",
     choices = available_riscv_isa,
     default = "i",
-    help="Enable RISC-V ISA extensions (default: %(default)s)",
+    help    = "Enable RISC-V ISA extensions (default: %(default)s)",
 )
 # Design space exploration simulations
 ap.add_argument(
     "--run-list",
     metavar = "<csv-file>",
-    help="Run multiple simulations listed in CSV file, giving all arguments by columns",
+    help    = "Run multiple simulations listed in CSV file, giving all arguments by columns",
+)
+ap.add_argument(
+    '--run-dir',
+    metavar = "<path>",
+    default = "run_dir",
+    help    = "Save all OpenFPGA outputs in a given directory (default: %(default)s)",
 )
 # Parse the user arguments
 args = ap.parse_args()
