@@ -45,9 +45,9 @@ To install all Python packages required by both *OpenFPGA* framework and *OpenFP
 
 .. code-block:: bash
 
-   pip install -r requirements.txt                      # to support OpenFPGA-Softcores scripts
-   pip install -r third_party/OpenFPGA/requirements.txt # to support OpenFPGA scripts
-   pip install -r docs/requirements.txt                 # only for developers
+   pip install -r requirements.txt                  # to support OpenFPGA-Softcores scripts
+   pip install -r $OPENFPGA_PATH/requirements.txt   # to support OpenFPGA scripts
+   pip install -r docs/requirements.txt             # only for developers
 
 
 .. note::
@@ -57,7 +57,16 @@ To install all Python packages required by both *OpenFPGA* framework and *OpenFP
 Virtual Python Environment
 --------------------------
 
-If you are in a restricted environment without admin rights, you can still installed a virtual Python environment according to operating system.
+If you are in a restricted environment without admin rights, you can install a virtual Python environment.
+Execute the following commands to add the ``pyvenv`` directory in the root of the project, then execute the list of commands described in the previous `Dependencies` section.
+
+.. code-block:: bash
+
+   python3 -m venv pyvenv                                 # create a virtual env
+   source pyvenv/bin/activate                             # active virtual env (bash/zsh)
+   pip install --upgrade pip                              # upgrade Pip
+
+If you have admin rights, you can still install a virtual Python environment according to operating system.
 This is currently working on Linux/MacOS operating systems.
 
 Ubuntu (>=18.04)
