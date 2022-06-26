@@ -42,9 +42,9 @@ However, additional Python packages must be installed with the following command
 If you are in a restricted environment without admin rights, you can still installed a virtual Python environment as described in the project documentation.
 
 ```bash
-    pip install -r requirements.txt                 # to support OpenFPGA-Softcores scripts
-    pip install -r $OPENFPGA_PATH/requirements.txt  # to support OpenFPGA scripts
-    pip install -r docs/requirements.txt            # only for developers
+pip install -r requirements.txt                 # to support OpenFPGA-Softcores scripts
+pip install -r $OPENFPGA_PATH/requirements.txt  # to support OpenFPGA scripts
+pip install -r docs/requirements.txt            # only for developers
 ```
 
 ### Directory structure
