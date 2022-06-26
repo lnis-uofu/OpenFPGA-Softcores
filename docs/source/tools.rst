@@ -40,9 +40,9 @@ where:
 Optional Arguments
 ~~~~~~~~~~~~~~~~~~
 
-.. option:: --device-layout <WxH|auto>
+.. option:: --device-layout <width>x<height>|auto
 
-    Define a fixed FPGA layout.
+    Define a fixed FPGA layout dimensions.
 
     **Default:** ``auto``
 
@@ -54,7 +54,7 @@ Optional Arguments
 
 .. option:: --cache-size <int>
 
-    Define the memory size of the soft-core (in Bytes).
+    Define the memory size (L1) of the core in bytes.
 
     **Default:** ``1024``
 
@@ -68,6 +68,20 @@ Optional Arguments
 
     **Default:** ``i``
 
+
+.. option:: --abc_command {abc, abc9}
+
+   *ABC* executable used to evaluate different mapping strategies.
+
+   **Default:** ``abc9``
+
+.. option:: --lut_max_width <width>|<w1>:<w2>|auto
+
+    *ABC* LUT mapping using a specified (max) LUT width.
+    The ``auto`` option will always take the largest LUT size available in the XML architecture.
+
+    **Default:** ``auto``
+   
 .. option:: --run-list <csv-filename>
 
     run multiple simulations listed in a CSV file, giving all arguments by columns
@@ -79,6 +93,16 @@ Optional Arguments
     Save all OpenFPGA outputs in a given directory
     
     **Default:** ``run_dir/``
+
+``run-dse``
+-----------
+.. program:: run-dse
+
+.. note::
+
+   This tool is not developed as of today.
+   It will aim to complement the ``run-softcore`` tool by running simulations with different FPGA architectures without duplicating simulation steps, such as *synthesis*, *packing*, *placing* and *routing* when it is necessary.
+
 
 ``report-yosys-vpr``
 --------------------

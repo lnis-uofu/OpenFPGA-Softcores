@@ -78,7 +78,7 @@ opt -fast -nodffe -nosdff
 #########################
 # Map LUTs
 #########################
-abc9 -lut 4:${LUT_SIZE}
+${YOSYS_ABC_COMMAND} -lut ${YOSYS_LUT_MAX_WIDTH}
 
 #########################
 # Check and show statisitics

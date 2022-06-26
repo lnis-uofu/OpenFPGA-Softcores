@@ -50,7 +50,7 @@ pip install -r docs/requirements.txt            # only for developers
 ### Directory structure
 
 - **docs/** -- Documentation of the *OpenFPGA-Softcores* project.
-- **fpga_archs/** -- FPGA architectures with extended tuning parameters (device layouts, ...).
+- **fpga_archs/** -- Task files of the FPGA architectures, define default *OpenFPGA* simulation parameters.
 - **openfpga_flow/** -- Additional *OpenFPGA* configuration files, used for large design space exploration.
 - **platform/** -- Python library package of launchers, reporters and generators.
 - **tests/** -- Configuration files to run multiple simulations with various parameters.

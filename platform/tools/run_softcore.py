@@ -28,9 +28,6 @@ project             = ProjectEnv()
 available_softcores = glob(f"{project.softcore_path}/[!_]*.py")
 available_softcores = [os.path.basename(s)[:-3] for s in available_softcores]
 
-## List of available RISC-V ISA extensions
-available_riscv_isa = ['i','im','imc']
-
 # ============================================================================
 #  Command-line arguments
 # ============================================================================
@@ -60,13 +57,13 @@ ap.add_argument(
 # Architecture-related arguments
 ap.add_argument(
     '--device-layout',
-    metavar = "<WxH|auto>",
+    metavar = "<width>x<height>|auto",
     default = "auto",
     help    = "Define a fixed FPGA layout dimensions (default: %(default)s)",
 )
 ap.add_argument(
     '--channel-width',
-    metavar = "<int|auto>",
+    metavar = "<int>|auto",
     default = "auto",
     help    = "Define a fixed FPGA channel width (default: %(default)s)",
 )
@@ -80,9 +77,22 @@ ap.add_argument(
 )
 ap.add_argument(
     "--isa",
-    choices = available_riscv_isa,
+    choices = ['i','im','imc'],
     default = "i",
     help    = "Enable RISC-V ISA extensions (default: %(default)s)",
+)
+# Synthesis-related arguments
+ap.add_argument(
+    "--abc_command",
+    choices = ["abc", "abc9"],
+    default = "abc9",
+    help    = "ABC executable used to evaluate different mapping strategies (default: %(default)s)",
+)
+ap.add_argument(
+    "--lut_max_width",
+    metavar = "<width>|<w1>:<w2>|auto",
+    default = "auto",
+    help    = "ABC LUT mapping using a specified (max) LUT width (default: %(default)s)",
 )
 # Design space exploration simulations
 ap.add_argument(
@@ -113,6 +123,8 @@ def run_single_task():
         output_dir      = args.run_dir,
         device_layout   = args.device_layout,
         channel_width   = args.channel_width,
+        abc_command     = args.abc_command,
+        lut_max_width   = args.lut_max_width,
     )
     # PicoRV32
     if args.softcore == "picorv32":
