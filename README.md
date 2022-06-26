@@ -1,5 +1,8 @@
 # OpenFPGA Soft-cores Exploration Platform
 
+[![Documentation Status](https://readthedocs.org/projects/openfpga-softcores/badge/?version=latest)](https://openfpga-softcores.readthedocs.io/en/latest/?badge=latest)
+
+
 The goal of the project is to co-architect open-source processors (or soft-cores) and heterogeneous FPGA targets using the open-source [OpenFPGA](https://github.com/lnis-uofu/OpenFPGA) framework.
 As presented in the figure below, the proposed platform acats as a Python API, wrapping EDA tools, for fast and accurate design space evaluation.
 
