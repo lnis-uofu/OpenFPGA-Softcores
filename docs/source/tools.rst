@@ -40,13 +40,13 @@ where:
 Optional Arguments
 ~~~~~~~~~~~~~~~~~~
 
-.. option:: --device-layout <width>x<height>|auto
+.. option:: --device-layout {<width>x<height>, auto}
 
     Define a fixed FPGA layout dimensions.
 
     **Default:** ``auto``
 
-.. option:: --channel-width <int|auto>
+.. option:: --channel-width {<int>, auto}
 
     Define a fixed FPGA channel width.
 
@@ -58,7 +58,7 @@ Optional Arguments
 
     **Default:** ``1024``
 
-.. option:: --isa {i,im,ima}
+.. option:: --isa {i, im, ima}
 
     Enable RISC-V ISA extensions.
 
@@ -75,7 +75,7 @@ Optional Arguments
 
    **Default:** ``abc9``
 
-.. option:: --lut_max_width <width>|<w1>:<w2>|auto
+.. option:: --lut_max_width {<width>, <w1>:<w2>, auto}
 
     *ABC* LUT mapping using a specified (max) LUT width.
     The ``auto`` option will always take the largest LUT size available in the XML architecture.
@@ -162,7 +162,11 @@ Optional Arguments
 .. option:: --pre-pack
 
     Parse the pre-pack report timing file.
-    
+
+.. option:: --post_place
+
+    Parse the post-place report timing file.
+
 .. option:: -o <rpt-file>, --output <rpt-file>
 
     Analyze all paths and save them in a RPT format.
@@ -187,18 +191,22 @@ Optional Arguments
 ~~~~~~~~~~~~~~~~~~
 
 .. option:: -p <path-id>, --path-id <path-id>
-    
+
     Define the path number to print.
 
     **Default:** ``0``
 
 .. option:: --hold
-   
+
     Parse the hold report timing file.
 
 .. option:: --pre-pack
 
     Parse the pre-pack report timing file.
+
+.. option:: --post_place
+
+    Parse the post-place report timing file.
     
 .. option:: -o <rpt-file>, --output <rpt-file>
 

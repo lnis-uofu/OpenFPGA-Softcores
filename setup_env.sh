@@ -61,10 +61,10 @@ _run_softcore_completions () {
     local cur prev opts
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="-h --help -d --debug --device-layout --channel-width --cache-size --isa --run-list --run-dir"
+    opts="-h --help -d --debug --device-layout --channel-width --cache-size --isa --abc-command --lut-max-width --run-list --run-dir"
     # optional arguments
     case ${prev} in
-        --device-layout|--channel-width)
+        --device-layout|--channel-width|--lut-max-width)
             opts="auto"
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
@@ -75,6 +75,11 @@ _run_softcore_completions () {
             ;;
         --isa)
             opts="i im imc"
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        --abc-command)
+            opts="abc abc9"
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;

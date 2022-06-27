@@ -66,6 +66,11 @@ def parse_args():
         help    = "parse the pre-pack report timing file",
     )
     ap.add_argument(
+        '--post-place',
+        action  = 'store_true',
+        help    = "parse the post-place report timing file",
+    )
+    ap.add_argument(
         '-o', '--output',
         metavar = "<csv-file>",
         help    = "save all paths in a given CSV file (default: %(default)s)",
@@ -128,10 +133,11 @@ def main():
     # setup/hold report timing file
     setuphold = "hold" if args.hold else "setup"
     prepack   = "pre_pack." if args.pre_pack else ""
+    postplace = "post_place." if args.post_place else ""
 
     # glob search
     searchdir = os.path.join(args.search_path, "**")
-    timing    = find_filename(searchdir, f"{prepack}report_timing.{setuphold}.rpt")
+    timing    = find_filename(searchdir, f"{prepack}{postplace}report_timing.{setuphold}.rpt")
     eblif     = find_filename(searchdir, "*.eblif")
     blif      = find_filename(searchdir, "*.blif")
     net       = find_filename(searchdir, "*.net")

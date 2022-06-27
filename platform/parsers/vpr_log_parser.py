@@ -4,6 +4,31 @@ import os
 from .base_parser import BaseParser
 
 class VprLogParser(object):
+    """Parse *VPR* ``.log`` and ``.result`` files to extract place and routing
+    information when the design is mapped on the FPGA.
+
+    Data extracted from the *VPR* parser:
+
+    - *Physical Block* (PB) types and their occupation ratio,
+    - device grid dimensions,
+    - device (best) channel width,
+    - maximum design frequency,
+    - critical path of the design,
+    - average net length,
+    - average bends per net,
+    - average wire segment per net,
+    - maximum segments used by a net,
+    - total routing area,
+    - total logic block area,
+    - total wire length.
+
+    Args:
+        stats_filename (str, optional): File name of the result file to parse.
+        logger_filename (str, optional): File name of the logger file to parse.
+        searchdir (str, optional): base path to recursively search for the
+            logger file to parse.
+    """
+
     def __init__(self,
                  stats_filename  = "vpr_stat.result",
                  logger_filename = "vpr_stdout.log",

@@ -15,12 +15,15 @@
 import docutils
 import os, sys
 
+# For converting SVG to PNG using rsvg
+import sphinxcontrib.rsvgconverter
+
 # For relative module imports
 sys.path.append(os.path.abspath("../../platform"))
 sys.path.append(os.path.abspath("../../platform/tools"))
 
-# For converting SVG to PNG using rsvg
-import sphinxcontrib.rsvgconverter
+# For readthedocs online compilation to pass
+os.environ['OPENFPGA_PATH'] = os.path.abspath("../../third_party/OpenFPGA")
 
 # -- Project information -----------------------------------------------------
 
@@ -28,8 +31,8 @@ project = u'OpenFPGA-Softcores'
 copyright = u'2022, LNIS'
 author = u'LNIS - University of Utah'
 
-release = u'0.1'
-version = u'0.1.0'
+release = u'1.0'
+version = u'1.0.0'
 
 # -- General configuration ---------------------------------------------------
 

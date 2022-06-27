@@ -83,13 +83,13 @@ ap.add_argument(
 )
 # Synthesis-related arguments
 ap.add_argument(
-    "--abc_command",
+    "--abc-command",
     choices = ["abc", "abc9"],
     default = "abc9",
     help    = "ABC executable used to evaluate different mapping strategies (default: %(default)s)",
 )
 ap.add_argument(
-    "--lut_max_width",
+    "--lut-max-width",
     metavar = "<width>|<w1>:<w2>|auto",
     default = "auto",
     help    = "ABC LUT mapping using a specified (max) LUT width (default: %(default)s)",
