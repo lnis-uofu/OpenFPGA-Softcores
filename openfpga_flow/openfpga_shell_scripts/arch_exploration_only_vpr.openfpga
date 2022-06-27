@@ -4,7 +4,7 @@ vpr ${VPR_ARCH_FILE} ${VPR_TESTBENCH_BLIF} \
     --route_chan_width ${VPR_ROUTE_CHAN_WIDTH} \
     --constant_net_method route \
     --timing_report_npaths -1 \
-    --post_place_timing_report post_place.timing_report.setup.rpt \
+    --post_place_timing_report post_place.report_timing.setup.rpt \
     --save_graphics on
 
 # VPR options:

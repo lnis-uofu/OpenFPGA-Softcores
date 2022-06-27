@@ -69,13 +69,13 @@ Optional Arguments
     **Default:** ``i``
 
 
-.. option:: --abc_command {abc, abc9}
+.. option:: --abc-command {abc, abc9}
 
    *ABC* executable used to evaluate different mapping strategies.
 
    **Default:** ``abc9``
 
-.. option:: --lut_max_width {<width>, <w1>:<w2>, auto}
+.. option:: --lut-max-width {<width>, <w1>:<w2>, auto}
 
     *ABC* LUT mapping using a specified (max) LUT width.
     The ``auto`` option will always take the largest LUT size available in the XML architecture.
@@ -163,7 +163,7 @@ Optional Arguments
 
     Parse the pre-pack report timing file.
 
-.. option:: --post_place
+.. option:: --post-place
 
     Parse the post-place report timing file.
 
@@ -204,7 +204,7 @@ Optional Arguments
 
     Parse the pre-pack report timing file.
 
-.. option:: --post_place
+.. option:: --post-place
 
     Parse the post-place report timing file.
     
