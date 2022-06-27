@@ -17,7 +17,7 @@ if [ -d "pyvenv" ]; then
 fi
 
 # OpenFPGA framework environment
-if [ -d "third_party/OpenFPGA" ]; then
+if [ -f "third_party/OpenFPGA/openfpga.sh" ]; then
     export OPENFPGA_PATH="${PWD}/third_party/OpenFPGA"
 fi
 
