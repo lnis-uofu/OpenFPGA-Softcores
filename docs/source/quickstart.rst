@@ -99,6 +99,10 @@ Open up a terminal and enter the following command sequence.
    source pyvenv/bin/activate                             # active virtual env
    pip install --upgrade pip                              # upgrade Pip
 
+.. warning::
+
+   Current the *OpenFPGA* framework is support for ``Ubuntu >=18.04`` and ``Red Hat >=7.5``.
+
 
 .. _openfpga: https://github.com/lnis-uofu/OpenFPGA
 .. _openfpga - how to compile: https://openfpga.readthedocs.io/en/master/tutorials/getting_started/compile/
