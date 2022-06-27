@@ -1,4 +1,4 @@
-# .readthedocs.yml
+# .readthedocs.yaml
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
@@ -23,10 +23,3 @@ formats:
 python:
   install:
     - requirements: docs/requirements.txt
-    - method: pip
-        path: .
-        extra_requirements:
-          - docs
-      - method: setuptools
-        path: another/package
-    system_packages: true
