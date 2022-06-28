@@ -96,7 +96,7 @@ ap.add_argument(
 )
 # Design space exploration simulations
 ap.add_argument(
-    "--run-list",
+    "--run-tests",
     metavar = "<csv-file>",
     help    = "Run multiple simulations listed in CSV file, giving all arguments by columns",
 )
@@ -148,7 +148,7 @@ def run_multiple_tasks():
     """
     Multiple task launcher
     """
-    with open(args.run_list, 'r') as fp:
+    with open(args.run_tests, 'r') as fp:
         tasks = list(csv.DictReader(fp))
         total = len(tasks)
         for idx, task in enumerate(tasks):
@@ -162,7 +162,7 @@ def run_multiple_tasks():
 
 
 if __name__ == "__main__":
-    if args.run_list:
+    if args.run_tests:
         run_multiple_tasks()
     else:
         run_single_task()

@@ -1,0 +1,13 @@
+abc_command,lut_max_width
+abc,4
+abc,5
+abc,6
+abc,4:5
+abc,5:6
+abc,4:6
+abc9,4
+abc9,5
+abc9,6
+abc9,4:5
+abc9,5:6
+abc9,4:6

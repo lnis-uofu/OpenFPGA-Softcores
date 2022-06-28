@@ -30,7 +30,7 @@ where:
 
 .. option:: <architecture>
 
-    FPGA architecture to evaluate, using any files in the 'fpga_archs/' dir.
+    FPGA architecture to evaluate, using any files in the *fpga_archs/* dir.
 
 .. note::
 
@@ -82,7 +82,7 @@ Optional Arguments
 
     **Default:** ``auto``
    
-.. option:: --run-list <csv-filename>
+.. option:: --run-tests <csv-filename>
 
     run multiple simulations listed in a CSV file, giving all arguments by columns
 
