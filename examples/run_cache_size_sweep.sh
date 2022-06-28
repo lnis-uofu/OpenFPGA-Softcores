@@ -21,5 +21,5 @@ ${PROJECT_TOOLS_PATH}/run_softcore.py \
     $softcore \
     $fpga_arch \
     $common_params \
-    --run-tests ${PROJECT_PATH}/tests/cache_size_sweep.csv \
+    --run-tests ${PROJECT_PATH}/tests/cache_size_sweep_params.csv \
     --run-dir ${PROJECT_PATH}/run_dir/${output_dir}

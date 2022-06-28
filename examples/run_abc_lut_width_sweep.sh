@@ -25,7 +25,7 @@ tool="${PROJECT_TOOLS_PATH}/run_softcore.py"
 $tool $softcore $fpga_arch \
     $common_params \
     --run-dir $run_dir \
-    --run-tests ${PROJECT_PATH}/tests/abc_lut_width_sweep.csv
+    --run-tests ${PROJECT_PATH}/tests/abc_lut_width_sweep_params.csv
 
 # Report results
 tool="${PROJECT_TOOLS_PATH}/report_yosys_vpr.py"

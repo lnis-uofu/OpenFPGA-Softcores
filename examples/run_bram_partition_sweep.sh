@@ -22,12 +22,10 @@ output_dir="${PROJECT_PATH}/outputs"
 
 # Run simulations
 tool="${PROJECT_TOOLS_PATH}/run_softcore.py"
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r8_dsp-s6r8
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r6_dsp-s7r8
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r8_dsp-s3r12
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r6_dsp-s3r12
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r8_dsp-x20
-$tool $softcore $fpga_arch $common_params --run-dir $run_dir --device-layout 40x40_bram-s2r6_dsp-s11r12
+$tool $softcore $fpga_arch \
+    $common_params \
+    --run-dir $run_dir \
+    --run-tests ${PROJECT_PATH}/tests/bram_partition_sweep_params.csv
 
 # Report results
 tool="${PROJECT_TOOLS_PATH}/report_yosys_vpr.py"

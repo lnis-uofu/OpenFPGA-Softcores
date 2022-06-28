@@ -1,0 +1,7 @@
+device_layout
+40x40_bram-s2r8_dsp-s6r8
+40x40_bram-s2r6_dsp-s7r8
+40x40_bram-s2r8_dsp-s3r12
+40x40_bram-s2r6_dsp-s3r12
+40x40_bram-s2r8_dsp-x20
+40x40_bram-s2r6_dsp-s11r12
