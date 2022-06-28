@@ -31,7 +31,7 @@ This option used external `OpenFPGA`_ framework installation, but still install 
    git clone https://github.com/lnis-uofu/OpenFPGA-Softcores.git
    cd OpenFPGA-Softcores
    git submodule update --init --recursive third_party/softcores
-   export OPENFPGA_PATH="<OPENFPGA_INSTALL_PATH>"   # specify the external OpenFPGA install path
+   export OPENFPGA_PATH="<OPENFPGA_INSTALL_PATH>"   # specify the OpenFPGA install path
    source setup_env.sh                              # source the project environment
 
 .. note::
@@ -101,7 +101,7 @@ Open up a terminal and enter the following command sequence.
 
 .. warning::
 
-   Current the *OpenFPGA* framework is support for ``Ubuntu >=18.04`` and ``Red Hat >=7.5``.
+   Currently, the *OpenFPGA* framework is only supported for the ``Ubuntu >=18.04`` and ``Red Hat >=7.5`` platforms.
 
 
 .. _openfpga: https://github.com/lnis-uofu/OpenFPGA
