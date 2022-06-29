@@ -39,6 +39,7 @@ export           PROJECT_PATH=$(pwd)
 export     PROJECT_TASKS_PATH="${PROJECT_PATH}/fpga_archs"
 export     PROJECT_TESTS_PATH="${PROJECT_PATH}/tests"
 export     PROJECT_TOOLS_PATH="${PROJECT_PATH}/platform/tools"
+export  PROJECT_ANALYSIS_PATH="${PROJECT_PATH}/platform/analysis"
 export PROJECT_SOFTCORES_PATH="${PROJECT_PATH}/platform/softcores"
 
 run-softcore () {
@@ -55,6 +56,14 @@ report-place-timing () {
 
 report-route-paths () {
     ${PYTHON_EXEC} ${PROJECT_TOOLS_PATH}/report_route_paths.py "$@"
+}
+
+analyze-yosys-vpr () {
+    ${PYTHON_EXEC} ${PROJECT_ANALYSIS_PATH}/analyze_yosys_vpr.py "$@"
+}
+
+analyze-placing () {
+    ${PYTHON_EXEC} ${PROJECT_ANALYSIS_PATH}/analyze_placing.py "$@"
 }
 
 _run_softcore_completions () {
