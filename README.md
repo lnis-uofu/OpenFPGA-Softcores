@@ -112,7 +112,21 @@ report-route-paths run_dir/run001 -o <output-csv-filename>
 
 ### C. Analysis and figure generators
 
-TODO: this section need to detail python scripts to analyze path timing after VPR pack, place and route steps.
+#### C.1. `analyze-yosys-vpr`
+
+This tool provides a quick data analysis coming from the *Yosys* and *VPR* generated files.
+
+```bash
+analyze-yosys-vpr <yosys-vpr-result-file>
+```
+
+#### C.2. `analyze-placing`
+
+This tool provides a post-route path analysis by grouping every paths by *Physiscal Block* (PB) types (*ff*, *bram*, *io*) or by bus names related to the RTL description of the soft-core.
+
+```bash
+analyze-placing <search-path> <param-file>
+```
 
 ## Available Soft-cores
 
